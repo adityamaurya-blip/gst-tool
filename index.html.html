@@ -1,0 +1,4045 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GST Reconciliation Tool — FY 2026-27</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --navy: #0a1628;
+    --navy2: #0f2040;
+    --navy3: #162d52;
+    --blue: #1a56db;
+    --blue-light: #3b82f6;
+    --teal: #0d9488;
+    --green: #059669;
+    --green-light: #d1fae5;
+    --amber: #d97706;
+    --amber-light: #fef3c7;
+    --red: #dc2626;
+    --red-light: #fee2e2;
+    --gray0: #f8fafc;
+    --gray1: #f1f5f9;
+    --gray2: #e2e8f0;
+    --gray3: #cbd5e1;
+    --gray4: #94a3b8;
+    --gray5: #64748b;
+    --gray6: #475569;
+    --gray7: #334155;
+    --gray8: #1e293b;
+    --white: #ffffff;
+    --font-main: 'IBM Plex Sans', sans-serif;
+    --font-mono: 'IBM Plex Mono', monospace;
+    --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+    --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.06);
+    --shadow-lg: 0 10px 25px rgba(0,0,0,0.12);
+    --radius: 6px;
+    --radius-lg: 10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-main); background: var(--gray1); color: var(--gray8); font-size: 13px; }
+  
+  /* HEADER */
+  #app-header {
+    background: var(--navy);
+    color: var(--white);
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    border-bottom: 1px solid var(--navy3);
+  }
+  .header-brand { display: flex; align-items: center; gap: 10px; }
+  .header-brand .logo { width: 32px; height: 32px; background: var(--blue); border-radius: var(--radius); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: var(--white); letter-spacing: -0.5px; }
+  .header-title { font-size: 15px; font-weight: 600; }
+  .header-sub { font-size: 11px; color: var(--gray4); font-family: var(--font-mono); }
+  .header-actions { display: flex; gap: 8px; align-items: center; }
+  .btn-header { background: var(--navy3); border: 1px solid rgba(255,255,255,0.1); color: var(--gray3); padding: 5px 12px; border-radius: var(--radius); cursor: pointer; font-size: 11px; font-family: var(--font-main); transition: all 0.2s; }
+  .btn-header:hover { background: var(--navy2); color: var(--white); }
+  
+  /* NAV TABS */
+  #nav-tabs {
+    background: var(--navy2);
+    display: flex;
+    gap: 2px;
+    padding: 0 24px;
+    overflow-x: auto;
+    border-bottom: 2px solid var(--navy3);
+  }
+  .nav-tab {
+    padding: 12px 16px;
+    color: var(--gray4);
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .nav-tab:hover { color: var(--gray2); }
+  .nav-tab.active { color: var(--white); border-bottom-color: var(--blue-light); }
+  .nav-tab .tab-icon { font-size: 13px; }
+  
+  /* MAIN CONTENT */
+  #main-content { padding: 20px 24px; max-width: 1600px; margin: 0 auto; }
+  .module { display: none; }
+  .module.active { display: block; }
+  
+  /* MODULE HEADER */
+  .module-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
+  .module-title { font-size: 18px; font-weight: 700; color: var(--navy); }
+  .module-subtitle { font-size: 12px; color: var(--gray5); margin-top: 2px; }
+  .module-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  
+  /* BUTTONS */
+  .btn { padding: 7px 14px; border-radius: var(--radius); border: none; cursor: pointer; font-size: 12px; font-family: var(--font-main); font-weight: 500; transition: all 0.18s; display: inline-flex; align-items: center; gap: 5px; }
+  .btn-primary { background: var(--blue); color: var(--white); }
+  .btn-primary:hover { background: #1d4ed8; }
+  .btn-success { background: var(--green); color: var(--white); }
+  .btn-success:hover { background: #047857; }
+  .btn-danger { background: var(--red); color: var(--white); }
+  .btn-danger:hover { background: #b91c1c; }
+  .btn-outline { background: var(--white); color: var(--gray7); border: 1px solid var(--gray3); }
+  .btn-outline:hover { background: var(--gray1); }
+  .btn-sm { padding: 4px 8px; font-size: 11px; }
+  .btn-amber { background: var(--amber); color: var(--white); }
+  .btn-amber:hover { background: #b45309; }
+  
+  /* FILTER BAR */
+  .filter-bar { display: flex; gap: 10px; align-items: center; background: var(--white); padding: 10px 14px; border-radius: var(--radius); border: 1px solid var(--gray2); margin-bottom: 14px; flex-wrap: wrap; }
+  .filter-bar label { font-size: 11px; color: var(--gray5); font-weight: 500; }
+  .filter-bar select, .filter-bar input { padding: 5px 10px; border: 1px solid var(--gray3); border-radius: var(--radius); font-size: 12px; font-family: var(--font-main); color: var(--gray8); background: var(--gray0); }
+  .filter-bar select:focus, .filter-bar input:focus { outline: none; border-color: var(--blue-light); }
+  
+  /* TABLE */
+  .table-wrap { background: var(--white); border-radius: var(--radius-lg); border: 1px solid var(--gray2); overflow-x: auto; box-shadow: var(--shadow); }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th { background: var(--navy); color: var(--gray2); padding: 9px 10px; text-align: left; font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; white-space: nowrap; }
+  th:first-child { border-radius: var(--radius) 0 0 0; }
+  th:last-child { border-radius: 0 var(--radius) 0 0; }
+  td { padding: 8px 10px; border-bottom: 1px solid var(--gray1); color: var(--gray7); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--gray0); }
+  tr.cancelled td { text-decoration: line-through; color: var(--gray4); }
+  tr.total-row td { background: var(--navy); color: var(--white); font-weight: 600; border-bottom: none; }
+  .amount { font-family: var(--font-mono); font-size: 11.5px; text-align: right; }
+  .gstin-col { font-family: var(--font-mono); font-size: 11px; }
+  .inv-no { font-family: var(--font-mono); font-size: 11px; color: var(--blue); }
+  
+  /* BADGES */
+  .badge { padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; display: inline-block; }
+  .badge-green { background: var(--green-light); color: var(--green); }
+  .badge-red { background: var(--red-light); color: var(--red); }
+  .badge-amber { background: var(--amber-light); color: var(--amber); }
+  .badge-blue { background: #dbeafe; color: var(--blue); }
+  .badge-gray { background: var(--gray2); color: var(--gray6); }
+  
+  /* MODAL */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; align-items: flex-start; justify-content: center; padding: 40px 20px; overflow-y: auto; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--white); border-radius: var(--radius-lg); padding: 24px; width: 100%; max-width: 760px; box-shadow: var(--shadow-lg); margin: auto; }
+  .modal-title { font-size: 16px; font-weight: 700; color: var(--navy); margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between; }
+  .modal-close { cursor: pointer; color: var(--gray4); font-size: 20px; line-height: 1; border: none; background: none; }
+  .modal-close:hover { color: var(--red); }
+  .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--gray2); }
+  
+  /* FORM */
+  .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+  .form-group { display: flex; flex-direction: column; gap: 4px; }
+  .form-group.full { grid-column: 1 / -1; }
+  .form-group label { font-size: 11px; font-weight: 600; color: var(--gray6); text-transform: uppercase; letter-spacing: 0.3px; }
+  .form-group input, .form-group select, .form-group textarea {
+    padding: 7px 10px; border: 1px solid var(--gray3); border-radius: var(--radius);
+    font-size: 12px; font-family: var(--font-main); color: var(--gray8); background: var(--gray0);
+    transition: border-color 0.2s;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--blue-light); background: var(--white); }
+  .form-group input[readonly] { background: var(--gray1); color: var(--gray5); }
+  .form-group input.calc { background: #eff6ff; color: var(--blue); font-family: var(--font-mono); font-weight: 600; }
+  
+  /* CARDS */
+  .cards-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .card { background: var(--white); border-radius: var(--radius-lg); padding: 16px; border: 1px solid var(--gray2); box-shadow: var(--shadow); }
+  .card-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--gray5); margin-bottom: 6px; }
+  .card-value { font-size: 18px; font-weight: 700; color: var(--navy); font-family: var(--font-mono); }
+  .card-sub { font-size: 10px; color: var(--gray4); margin-top: 3px; }
+  .card.blue { border-left: 3px solid var(--blue); }
+  .card.green { border-left: 3px solid var(--green); }
+  .card.amber { border-left: 3px solid var(--amber); }
+  .card.red { border-left: 3px solid var(--red); }
+  .card.teal { border-left: 3px solid var(--teal); }
+  
+  /* SUMMARY TABLE */
+  .summary-table { background: var(--white); border-radius: var(--radius-lg); border: 1px solid var(--gray2); overflow: auto; box-shadow: var(--shadow); }
+  .summary-table table th { background: var(--navy); }
+  .summary-table table th.sub { background: var(--navy3); font-size: 10px; }
+  .summary-table table tr.highlight td { background: #eff6ff; font-weight: 600; }
+  .summary-table table tr.payable td { background: var(--navy); color: var(--white); font-weight: 700; }
+  .summary-table table tr.net-pay td { background: #14532d; color: var(--white); font-weight: 700; }
+  .summary-table table tr.credit td { background: var(--green-light); color: var(--green); font-weight: 600; }
+  
+  /* 2B RECO */
+  .reco-tabs { display: flex; gap: 2px; margin-bottom: 16px; background: var(--navy); padding: 4px; border-radius: var(--radius); width: fit-content; }
+  .reco-tab { padding: 7px 14px; border-radius: 4px; cursor: pointer; font-size: 12px; color: var(--gray4); font-weight: 500; }
+  .reco-tab.active { background: var(--white); color: var(--navy); }
+  .reco-panel { display: none; }
+  .reco-panel.active { display: block; }
+  
+  /* STATUS LEGEND */
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 12px; }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--gray6); }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+  
+  /* TOAST */
+  #toast { position: fixed; bottom: 20px; right: 20px; z-index: 300; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+  .toast-item { background: var(--gray8); color: var(--white); padding: 10px 16px; border-radius: var(--radius); font-size: 12px; box-shadow: var(--shadow-lg); animation: slideIn 0.3s ease; }
+  .toast-item.success { background: var(--green); }
+  .toast-item.error { background: var(--red); }
+  @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+  
+  /* EMPTY STATE */
+  .empty-state { text-align: center; padding: 50px 20px; color: var(--gray4); }
+  .empty-state .empty-icon { font-size: 40px; margin-bottom: 12px; }
+  .empty-state p { font-size: 13px; }
+  
+  /* PRINT */
+  @media print {
+    #app-header, #nav-tabs, .module-actions, .filter-bar, .btn, .no-print { display: none !important; }
+    body { background: white; }
+    .module { display: block !important; }
+  }
+  
+  /* RESPONSIVE */
+  @media (max-width: 768px) {
+    #main-content { padding: 12px; }
+    .form-grid { grid-template-columns: 1fr 1fr; }
+    .cards-row { grid-template-columns: 1fr 1fr; }
+  }
+  
+  /* SETTINGS */
+  .settings-section { background: var(--white); border-radius: var(--radius-lg); padding: 24px; border: 1px solid var(--gray2); margin-bottom: 16px; box-shadow: var(--shadow); }
+  .settings-section h3 { font-size: 13px; font-weight: 700; color: var(--navy); margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid var(--blue); padding-bottom: 8px; display: inline-block; }
+  
+  /* ITC RECO COLORS */
+  tr.matched td { border-left: 3px solid var(--green); }
+  tr.only-books td { border-left: 3px solid var(--amber); }
+  tr.only-2b td { border-left: 3px solid var(--red); }
+  
+  /* PAYMENT MODULE */
+  .payment-card { background: var(--white); border-radius: var(--radius-lg); padding: 28px; border: 1px solid var(--gray2); box-shadow: var(--shadow-md); max-width: 800px; }
+  .payment-card h2 { font-size: 20px; font-weight: 700; color: var(--navy); margin-bottom: 6px; }
+  .payment-card .period { font-size: 14px; color: var(--blue); font-weight: 600; margin-bottom: 20px; }
+  .pay-row { display: flex; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--gray1); font-size: 13px; }
+  .pay-row.total { border-top: 2px solid var(--navy); border-bottom: 2px solid var(--navy); font-weight: 700; font-size: 14px; color: var(--navy); }
+  .pay-row.cash { color: var(--red); font-weight: 600; }
+  .pay-amount { font-family: var(--font-mono); }
+  .pay-section-title { font-size: 11px; font-weight: 700; color: var(--gray5); text-transform: uppercase; letter-spacing: 0.5px; margin: 16px 0 6px; }
+
+  .search-input { padding: 5px 10px; border: 1px solid var(--gray3); border-radius: var(--radius); font-size: 12px; width: 180px; }
+  .search-input:focus { outline: none; border-color: var(--blue-light); }
+
+  /* IMPORT SYSTEM */
+  .btn-import { background: #0f766e; color: var(--white); }
+  .btn-import:hover { background: #0d5c56; }
+  .btn-tpl { background: #7c3aed; color: var(--white); }
+  .btn-tpl:hover { background: #6d28d9; }
+
+  .import-modal { max-width: 900px; }
+  .import-zone {
+    border: 2px dashed var(--gray3); border-radius: var(--radius-lg);
+    padding: 36px 20px; text-align: center; cursor: pointer;
+    transition: all 0.2s; background: var(--gray0); margin-bottom: 16px;
+  }
+  .import-zone:hover, .import-zone.drag-over { border-color: var(--blue-light); background: #eff6ff; }
+  .import-zone .zone-icon { font-size: 36px; margin-bottom: 8px; }
+  .import-zone p { font-size: 13px; color: var(--gray5); }
+  .import-zone strong { color: var(--blue); cursor: pointer; }
+  .import-zone input[type=file] { display: none; }
+
+  .preview-table-wrap { max-height: 320px; overflow: auto; border: 1px solid var(--gray2); border-radius: var(--radius); margin-bottom: 12px; }
+  .preview-table-wrap table { font-size: 11px; }
+  .preview-table-wrap th { font-size: 10px; padding: 6px 8px; position: sticky; top: 0; z-index: 1; }
+  .preview-table-wrap td { padding: 5px 8px; }
+  .row-ok td:first-child { border-left: 3px solid var(--green); }
+  .row-warn td:first-child { border-left: 3px solid var(--amber); }
+  .row-err td:first-child { border-left: 3px solid var(--red); }
+
+  .import-stats { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+  .import-stat { padding: 8px 14px; border-radius: var(--radius); font-size: 12px; font-weight: 600; }
+  .stat-total { background: #dbeafe; color: var(--blue); }
+  .stat-ok { background: var(--green-light); color: var(--green); }
+  .stat-warn { background: var(--amber-light); color: var(--amber); }
+  .stat-err { background: var(--red-light); color: var(--red); }
+
+  .template-info { background: var(--navy); color: var(--gray2); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 16px; font-size: 12px; line-height: 1.7; }
+  .template-info code { background: rgba(255,255,255,0.12); padding: 1px 5px; border-radius: 3px; font-family: var(--font-mono); font-size: 11px; color: #93c5fd; }
+  .template-columns { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .col-tag { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); border-radius: 20px; padding: 2px 10px; font-size: 10px; font-family: var(--font-mono); color: #bfdbfe; }
+  .col-tag.required { border-color: #fbbf24; color: #fde68a; }
+
+  .import-mode-toggle { display: flex; gap: 2px; background: var(--gray1); padding: 3px; border-radius: var(--radius); width: fit-content; margin-bottom: 14px; }
+  .mode-btn { padding: 5px 14px; border-radius: 4px; font-size: 11px; font-weight: 600; cursor: pointer; color: var(--gray5); border: none; background: none; font-family: var(--font-main); }
+  .mode-btn.active { background: var(--white); color: var(--navy); box-shadow: var(--shadow); }
+
+  /* ── LOGIN SCREEN ── */
+  #login-screen {
+    display: none;
+    position: fixed; inset: 0;
+    background: linear-gradient(135deg, #0a1628 0%, #0f2040 50%, #162d52 100%);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+  }
+  #login-screen.visible { display: flex; }
+  .login-box {
+    background: #fff;
+    border-radius: 16px;
+    padding: 40px 44px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.4);
+    animation: loginSlideUp 0.4s cubic-bezier(.16,1,.3,1);
+  }
+  @keyframes loginSlideUp {
+    from { opacity:0; transform: translateY(24px); }
+    to   { opacity:1; transform: translateY(0); }
+  }
+  .login-logo {
+    width: 48px; height: 48px;
+    background: var(--navy);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 18px; color: #fff;
+    margin-bottom: 20px;
+  }
+  .login-title { font-size: 22px; font-weight: 700; color: var(--navy); margin-bottom: 4px; }
+  .login-sub   { font-size: 13px; color: var(--gray5); margin-bottom: 28px; }
+  .login-field { margin-bottom: 16px; }
+  .login-field label { display: block; font-size: 12px; font-weight: 600; color: var(--gray7); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.4px; }
+  .login-field input {
+    width: 100%; padding: 11px 14px;
+    border: 1.5px solid var(--gray2);
+    border-radius: var(--radius);
+    font-size: 14px; font-family: var(--font-main);
+    color: var(--gray8); background: var(--gray0);
+    transition: border-color 0.15s;
+    outline: none;
+  }
+  .login-field input:focus { border-color: var(--blue); background: #fff; }
+  .login-btn {
+    width: 100%; padding: 13px;
+    background: var(--navy); color: #fff;
+    border: none; border-radius: var(--radius);
+    font-size: 14px; font-weight: 600;
+    cursor: pointer; font-family: var(--font-main);
+    margin-top: 8px;
+    transition: background 0.15s, transform 0.1s;
+  }
+  .login-btn:hover { background: var(--navy2); }
+  .login-btn:active { transform: scale(0.98); }
+  .login-btn:disabled { background: var(--gray3); cursor: not-allowed; }
+  .login-error {
+    background: var(--red-light); color: var(--red);
+    border: 1px solid #fca5a5;
+    border-radius: var(--radius);
+    padding: 10px 14px; font-size: 12px;
+    margin-bottom: 14px; display: none;
+  }
+  .login-error.show { display: block; }
+
+  /* ── ADMIN PANEL ── */
+  #admin-panel {
+    display: none;
+    position: fixed; inset: 0;
+    background: var(--gray1);
+    z-index: 9000;
+    overflow-y: auto;
+  }
+  #admin-panel.visible { display: block; }
+  .admin-header {
+    background: var(--navy);
+    color: #fff;
+    padding: 0 28px;
+    height: 56px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 10;
+  }
+  .admin-header-left { display: flex; align-items: center; gap: 12px; }
+  .admin-header h1 { font-size: 16px; font-weight: 600; }
+  .admin-body { max-width: 900px; margin: 32px auto; padding: 0 24px; }
+  .admin-section { background: #fff; border-radius: var(--radius-lg); box-shadow: var(--shadow); margin-bottom: 24px; overflow: hidden; }
+  .admin-section-hdr { padding: 18px 24px; border-bottom: 1px solid var(--gray2); display: flex; align-items: center; justify-content: space-between; }
+  .admin-section-hdr h2 { font-size: 15px; font-weight: 600; color: var(--navy); }
+  .admin-section-body { padding: 24px; }
+  .create-user-grid { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 12px; align-items: end; }
+  .create-user-grid label { display: block; font-size: 11px; font-weight: 600; color: var(--gray6); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 5px; }
+  .create-user-grid input {
+    width: 100%; padding: 9px 12px;
+    border: 1.5px solid var(--gray2); border-radius: var(--radius);
+    font-size: 13px; font-family: var(--font-main); color: var(--gray8);
+    outline: none;
+  }
+  .create-user-grid input:focus { border-color: var(--blue); }
+  .users-table { width: 100%; border-collapse: collapse; }
+  .users-table th { text-align: left; font-size: 11px; font-weight: 600; color: var(--gray5); text-transform: uppercase; letter-spacing: 0.4px; padding: 10px 16px; border-bottom: 1px solid var(--gray2); }
+  .users-table td { padding: 12px 16px; border-bottom: 1px solid var(--gray1); font-size: 13px; }
+  .users-table tr:last-child td { border-bottom: none; }
+  .badge-active   { background: #d1fae5; color: #065f46; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .badge-inactive { background: var(--red-light); color: var(--red); padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .user-row-actions { display: flex; gap: 6px; }
+
+  /* ── USER BAR in app header ── */
+  .user-info-bar { display: flex; align-items: center; gap: 10px; }
+  .user-avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--blue); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #fff; text-transform: uppercase; }
+  .user-name-label { font-size: 12px; color: rgba(255,255,255,0.8); }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- LOGIN SCREEN -->
+<!-- ═══════════════════════════════════════════════════ -->
+<div id="login-screen" class="visible">
+  <div class="login-box">
+    <div class="login-logo">GST</div>
+    <div class="login-title">Welcome back</div>
+    <div class="login-sub">Sign in to GST Reconciliation Tool · FY 2026-27</div>
+    <div class="login-error" id="login-error"></div>
+    <div class="login-field">
+      <label>Email / Username</label>
+      <input type="text" id="login-email" placeholder="username or email@domain.com" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div class="login-field">
+      <label>Password</label>
+      <input type="password" id="login-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="login-btn" id="login-btn" onclick="doLogin()">Sign In</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- ADMIN PANEL -->
+<!-- ═══════════════════════════════════════════════════ -->
+<div id="admin-panel">
+  <div class="admin-header">
+    <div class="admin-header-left">
+      <div class="login-logo" style="width:36px;height:36px;font-size:14px;margin:0">GST</div>
+      <h1>Admin Dashboard — GST Tool</h1>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <span id="admin-user-label" style="font-size:12px;color:rgba(255,255,255,0.7)"></span>
+      <button class="btn-header" style="background:#0f766e;color:#fff;border-color:#0f766e" onclick="adminOpenGSTTool()">📊 My GST Tool</button>
+      <button class="btn-header" onclick="doLogout()" style="color:#f87171;border-color:#f87171">🚪 Logout</button>
+    </div>
+  </div>
+
+  <!-- Admin Tab Nav -->
+  <div style="background:var(--navy2);border-bottom:1px solid var(--navy3);padding:0 28px;display:flex;gap:4px">
+    <div class="admin-tab active" id="atab-companies" onclick="switchAdminTab('companies')" style="padding:12px 18px;font-size:13px;font-weight:600;color:#fff;cursor:pointer;border-bottom:2px solid var(--blue);opacity:1">🏢 Companies</div>
+    <div class="admin-tab" id="atab-users" onclick="switchAdminTab('users')" style="padding:12px 18px;font-size:13px;font-weight:600;color:rgba(255,255,255,0.5);cursor:pointer;border-bottom:2px solid transparent">👥 Users</div>
+  </div>
+
+  <div class="admin-body">
+
+    <!-- ── COMPANIES TAB ── -->
+    <div id="admin-tab-companies">
+
+      <!-- Create Company -->
+      <div class="admin-section">
+        <div class="admin-section-hdr">
+          <h2>🏢 Create New Client / Company</h2>
+        </div>
+        <div class="admin-section-body">
+          <div id="create-company-error"   style="display:none;background:var(--red-light);color:var(--red);padding:10px 14px;border-radius:var(--radius);font-size:12px;margin-bottom:12px"></div>
+          <div id="create-company-success" style="display:none;background:#d1fae5;color:#065f46;padding:10px 14px;border-radius:var(--radius);font-size:12px;margin-bottom:12px"></div>
+          <div style="display:grid;grid-template-columns:2fr 1fr auto;gap:12px;align-items:end">
+            <div>
+              <label style="display:block;font-size:11px;font-weight:600;color:var(--gray6);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:5px">Company Name</label>
+              <input type="text" id="new-company-name" placeholder="ABC Pvt Ltd" style="width:100%;padding:9px 12px;border:1.5px solid var(--gray2);border-radius:var(--radius);font-size:13px;font-family:var(--font-main);outline:none">
+            </div>
+            <div>
+              <label style="display:block;font-size:11px;font-weight:600;color:var(--gray6);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:5px">GSTIN (optional)</label>
+              <input type="text" id="new-company-gstin" placeholder="29XXXXX" style="width:100%;padding:9px 12px;border:1.5px solid var(--gray2);border-radius:var(--radius);font-size:13px;font-family:var(--font-mono);outline:none">
+            </div>
+            <div>
+              <button class="btn btn-primary" onclick="adminCreateCompany()" id="create-company-btn" style="padding:9px 20px;white-space:nowrap">+ Create Company</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Companies List -->
+      <div class="admin-section">
+        <div class="admin-section-hdr">
+          <h2>All Companies</h2>
+          <button class="btn btn-outline btn-sm" onclick="loadAdminCompanies()">↻ Refresh</button>
+        </div>
+        <div id="admin-companies-body">
+          <div style="padding:24px;color:var(--gray5);text-align:center">Loading…</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── USERS TAB ── -->
+    <div id="admin-tab-users" style="display:none">
+
+      <!-- Create User -->
+      <div class="admin-section">
+        <div class="admin-section-hdr">
+          <h2>➕ Create New User</h2>
+        </div>
+        <div class="admin-section-body">
+          <div id="create-user-error"   style="display:none;background:var(--red-light);color:var(--red);padding:10px 14px;border-radius:var(--radius);font-size:12px;margin-bottom:12px"></div>
+          <div id="create-user-success" style="display:none;background:#d1fae5;color:#065f46;padding:10px 14px;border-radius:var(--radius);font-size:12px;margin-bottom:12px"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:12px;align-items:end">
+            <div>
+              <label style="display:block;font-size:11px;font-weight:600;color:var(--gray6);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:5px">Display Name</label>
+              <input type="text" id="new-user-name" placeholder="Rahul Sharma" style="width:100%;padding:9px 12px;border:1.5px solid var(--gray2);border-radius:var(--radius);font-size:13px;font-family:var(--font-main);outline:none">
+            </div>
+            <div>
+              <label style="display:block;font-size:11px;font-weight:600;color:var(--gray6);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:5px">Username (for login)</label>
+              <input type="text" id="new-user-username" placeholder="e.g. rahul123" style="width:100%;padding:9px 12px;border:1.5px solid var(--gray2);border-radius:var(--radius);font-size:13px;font-family:var(--font-main);outline:none">
+            </div>
+            <div>
+              <label style="display:block;font-size:11px;font-weight:600;color:var(--gray6);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:5px">Password</label>
+              <input type="password" id="new-user-password" placeholder="Min 8 characters" style="width:100%;padding:9px 12px;border:1.5px solid var(--gray2);border-radius:var(--radius);font-size:13px;font-family:var(--font-main);outline:none">
+            </div>
+            <div>
+              <label style="display:block;font-size:11px;font-weight:600;color:var(--gray6);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:5px">Company</label>
+              <select id="new-user-company" style="width:100%;padding:9px 12px;border:1.5px solid var(--gray2);border-radius:var(--radius);font-size:13px;font-family:var(--font-main);outline:none;background:#fff">
+                <option value="">— Select Company —</option>
+              </select>
+            </div>
+            <div>
+              <button class="btn btn-primary" onclick="adminCreateUser()" id="create-user-btn" style="white-space:nowrap;padding:9px 18px">Create User</button>
+            </div>
+          </div>
+          <p style="font-size:11px;color:var(--gray4);margin-top:10px">💡 Just enter a short username like <strong>rahul123</strong> — no email needed. User logs in with this username and password.</p>
+        </div>
+      </div>
+
+      <!-- Users List -->
+      <div class="admin-section">
+        <div class="admin-section-hdr">
+          <h2>👥 All Users</h2>
+          <button class="btn btn-outline btn-sm" onclick="loadAdminUsers()">↻ Refresh</button>
+        </div>
+        <div id="admin-users-body">
+          <div style="padding:24px;color:var(--gray5);text-align:center">Loading users…</div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- CREDENTIALS MODAL -->
+<!-- ═══════════════════════════════════════════════════ -->
+<div id="modal-credentials" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:99999;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:16px;padding:32px;width:100%;max-width:440px;box-shadow:0 25px 60px rgba(0,0,0,0.3);animation:loginSlideUp 0.3s cubic-bezier(.16,1,.3,1)">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <h2 style="font-size:16px;font-weight:700;color:var(--navy)">🔑 User Credentials</h2>
+      <button onclick="closeCredentialsModal()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--gray5)">✕</button>
+    </div>
+    <div id="credentials-content"></div>
+    <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--gray2)">
+      <p style="font-size:12px;font-weight:600;color:var(--gray6);margin-bottom:8px">Reset Password</p>
+      <div style="display:flex;gap:8px">
+        <input type="text" id="reset-password-input" placeholder="Enter new password" style="flex:1;padding:8px 12px;border:1.5px solid var(--gray2);border-radius:var(--radius);font-size:13px;font-family:var(--font-main);outline:none">
+        <button onclick="adminResetPassword()" class="btn btn-primary" style="white-space:nowrap">Reset</button>
+      </div>
+      <p id="reset-password-msg" style="font-size:12px;margin-top:8px;display:none"></p>
+    </div>
+  </div>
+</div>
+<div id="app-wrapper" style="display:none">
+
+<!-- HEADER -->
+<div id="app-header">
+  <div class="header-brand">
+    <div class="logo">GST</div>
+    <div>
+      <div class="header-title" id="hdr-company">Loading…</div>
+      <div class="header-sub">FY 2026-27 Reconciliation Tool</div>
+    </div>
+  </div>
+  <div class="header-actions">
+    <button class="btn-header" style="background:#7c3aed;color:#fff;border-color:#7c3aed" onclick="downloadMasterTemplate()">⬇ Download Template</button>
+    <button class="btn-header" style="background:#0f766e;color:#fff;border-color:#0f766e" onclick="openImport('workbook')">📂 Import Workbook</button>
+    <button class="btn-header" onclick="exportData()">⬇ Export JSON</button>
+    <button class="btn-header" onclick="document.getElementById('importFile').click()">⬆ Import JSON</button>
+    <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+    <button class="btn-header" style="color:#f87171" onclick="clearAllData()">🗑 Clear All</button>
+    <div id="header-user-area"></div>
+  </div>
+</div>
+
+<!-- NAV TABS -->
+<div id="nav-tabs">
+  <div class="nav-tab active" onclick="switchTab('sales')" id="tab-sales"><span class="tab-icon">📤</span>Sales</div>
+  <div class="nav-tab" onclick="switchTab('returns')" id="tab-returns"><span class="tab-icon">↩</span>Credit Notes</div>
+  <div class="nav-tab" onclick="switchTab('purchase')" id="tab-purchase"><span class="tab-icon">📥</span>Purchase</div>
+  <div class="nav-tab" onclick="switchTab('rcm')" id="tab-rcm"><span class="tab-icon">🔄</span>RCM</div>
+  <div class="nav-tab" onclick="switchTab('reco2b')" id="tab-reco2b"><span class="tab-icon">⚖</span>2B Reco</div>
+  <div class="nav-tab" onclick="switchTab('summary')" id="tab-summary"><span class="tab-icon">📊</span>Summary</div>
+  <div class="nav-tab" onclick="switchTab('payment')" id="tab-payment"><span class="tab-icon">💳</span>Payment</div>
+  <div class="nav-tab" onclick="switchTab('settings')" id="tab-settings"><span class="tab-icon">⚙</span>Settings</div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div id="main-content">
+
+  <!-- ===== MODULE 1: SALES ===== -->
+  <div id="mod-sales" class="module active">
+    <div class="module-header">
+      <div>
+        <div class="module-title">Sales Register</div>
+        <div class="module-subtitle">Outward supply invoices (GSTR-1 data)</div>
+      </div>
+      <div class="module-actions">
+        <button class="btn btn-primary" onclick="openModal('sales')">+ Add Invoice</button>
+      </div>
+    </div>
+    <div id="sales-cards" class="cards-row"></div>
+    <div class="filter-bar">
+      <label>Month:</label>
+      <select id="sales-month-filter" onchange="renderSalesTable()">
+        <option value="">All Months</option>
+      </select>
+      <label>Search:</label>
+      <input type="text" class="search-input" id="sales-search" placeholder="Party / Invoice…" oninput="renderSalesTable()">
+      <label>Status:</label>
+      <select id="sales-status-filter" onchange="renderSalesTable()">
+        <option value="">All</option>
+        <option value="Active">Active</option>
+        <option value="Cancelled">Cancelled</option>
+      </select>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th><th>Month</th><th>Date</th><th>Party Name</th><th>GSTIN</th>
+            <th>Invoice No.</th><th>Taxable Amt</th><th>IGST</th><th>CGST</th><th>SGST</th>
+            <th>OOP</th><th>Total</th><th>Status</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="sales-tbody"></tbody>
+        <tfoot id="sales-tfoot"></tfoot>
+      </table>
+    </div>
+  </div>
+
+  <!-- ===== MODULE 2: SALES RETURNS ===== -->
+  <div id="mod-returns" class="module">
+    <div class="module-header">
+      <div>
+        <div class="module-title">Credit Notes</div>
+        <div class="module-subtitle">Reduces net sales and tax liability</div>
+      </div>
+      <div class="module-actions">
+        <button class="btn btn-primary" onclick="openModal('returns')">+ Add Credit Note</button>
+      </div>
+    </div>
+    <div class="filter-bar">
+      <label>Month:</label>
+      <select id="returns-month-filter" onchange="renderReturnsTable()">
+        <option value="">All Months</option>
+      </select>
+      <label>Search:</label>
+      <input type="text" class="search-input" id="returns-search" placeholder="Party / CN No…" oninput="renderReturnsTable()">
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th><th>Month</th><th>Date</th><th>Party Name</th><th>GSTIN</th>
+            <th>CN Number</th><th>Orig. Invoice</th><th>Reason</th><th>Taxable Amt</th>
+            <th>IGST</th><th>CGST</th><th>SGST</th><th>Total</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="returns-tbody"></tbody>
+        <tfoot id="returns-tfoot"></tfoot>
+      </table>
+    </div>
+  </div>
+
+  <!-- ===== MODULE 3: PURCHASE ===== -->
+  <div id="mod-purchase" class="module">
+    <div class="module-header">
+      <div>
+        <div class="module-title">Purchase Register (ITC)</div>
+        <div class="module-subtitle">Inward supply invoices for Input Tax Credit</div>
+      </div>
+      <div class="module-actions">
+        <button class="btn btn-primary" onclick="openModal('purchase')">+ Add Purchase</button>
+      </div>
+    </div>
+    <div id="purchase-cards" class="cards-row"></div>
+    <div class="filter-bar">
+      <label>Month:</label>
+      <select id="purchase-month-filter" onchange="renderPurchaseTable()">
+        <option value="">All Months</option>
+      </select>
+      <label>Search:</label>
+      <input type="text" class="search-input" id="purchase-search" placeholder="Supplier / Invoice…" oninput="renderPurchaseTable()">
+      <label>ITC:</label>
+      <select id="purchase-itc-filter" onchange="renderPurchaseTable()">
+        <option value="">All</option>
+        <option value="Yes">Yes</option>
+        <option value="No">No</option>
+        <option value="Partial">Partial</option>
+      </select>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th><th>Month</th><th>Date</th><th>Supplier</th><th>GSTIN</th>
+            <th>Invoice No.</th><th>Taxable</th><th>IGST</th><th>CGST</th><th>SGST</th>
+            <th>Total</th><th>ITC?</th><th>ITC Amt</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="purchase-tbody"></tbody>
+        <tfoot id="purchase-tfoot"></tfoot>
+      </table>
+    </div>
+  </div>
+
+  <!-- ===== MODULE 4: RCM ===== -->
+  <div id="mod-rcm" class="module">
+    <div class="module-header">
+      <div>
+        <div class="module-title">RCM Register</div>
+        <div class="module-subtitle">Reverse Charge Mechanism — liability &amp; credit</div>
+      </div>
+      <div class="module-actions">
+        <button class="btn btn-primary" onclick="openModal('rcm')">+ Add RCM Entry</button>
+      </div>
+    </div>
+    <div class="filter-bar">
+      <label>Month:</label>
+      <select id="rcm-month-filter" onchange="renderRcmTable()">
+        <option value="">All Months</option>
+      </select>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th><th>Month</th><th>Date</th><th>Supplier</th><th>Nature of Service</th>
+            <th>Taxable Value</th><th>IGST</th><th>CGST</th><th>SGST</th><th>Total Tax</th>
+            <th>Tax Paid?</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="rcm-tbody"></tbody>
+        <tfoot id="rcm-tfoot"></tfoot>
+      </table>
+    </div>
+  </div>
+
+  <!-- ===== MODULE 5: 2B RECO ===== -->
+  <div id="mod-reco2b" class="module">
+    <div class="module-header">
+      <div>
+        <div class="module-title">GSTR-2B Reconciliation</div>
+        <div class="module-subtitle">Match purchase register vs GSTR-2B portal data</div>
+      </div>
+      <div class="module-actions">
+        <button class="btn btn-primary" onclick="openModal('2b')">+ Add 2B Entry</button>
+        <button class="btn btn-outline" onclick="run2BReco()">⚖ Run Reconciliation</button>
+      </div>
+    </div>
+    <div class="reco-tabs">
+      <div class="reco-tab active" onclick="switch2BTab('upload')" id="r2b-tab-upload">2B Data</div>
+      <div class="reco-tab" onclick="switch2BTab('match')" id="r2b-tab-match">Reconciliation View</div>
+      <div class="reco-tab" onclick="switch2BTab('itc')" id="r2b-tab-itc">ITC Summary</div>
+    </div>
+    <div id="r2b-panel-upload" class="reco-panel active">
+      <div class="filter-bar">
+        <label>Month:</label>
+        <select id="r2b-month-filter" onchange="render2BTable()">
+          <option value="">All Months</option>
+        </select>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>#</th><th>Month</th><th>Supplier</th><th>GSTIN</th><th>Invoice No.</th><th>Invoice Date</th><th>Taxable</th><th>IGST</th><th>CGST</th><th>SGST</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="r2b-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div id="r2b-panel-match" class="reco-panel">
+      <div class="filter-bar">
+        <label>Month:</label>
+        <select id="reco-month-filter" onchange="run2BReco()">
+          <option value="">All Months</option>
+        </select>
+        <label style="margin-left:12px">Show:</label>
+        <select id="reco-status-filter" onchange="run2BReco()">
+          <option value="">All</option>
+          <option value="matched">✅ Matched only</option>
+          <option value="only-books">⚠ In Books / Not in 2B</option>
+          <option value="only-2b">❌ In 2B / Not in Books</option>
+        </select>
+      </div>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>Matched</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--amber)"></div>In Books / Not in 2B — Follow up with supplier</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div>In 2B / Not in Books — Claim ITC directly or Skip</div>
+      </div>
+      <div class="table-wrap">
+        <table style="width:100%;table-layout:fixed">
+          <thead>
+            <tr>
+              <th style="width:72px">Month</th>
+              <th style="width:170px">Supplier</th>
+              <th style="width:145px">GSTIN</th>
+              <th style="width:145px">Invoice No.</th>
+              <th style="width:105px;text-align:right">Books ITC</th>
+              <th style="width:105px;text-align:right">2B ITC</th>
+              <th style="width:75px;text-align:right">Diff</th>
+              <th style="width:110px;text-align:center">Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="reco-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div id="r2b-panel-itc" class="reco-panel">
+      <div id="itc-summary-content"></div>
+    </div>
+  </div>
+
+  <!-- ===== MODULE 6: SUMMARY ===== -->
+  <div id="mod-summary" class="module">
+    <div class="module-header">
+      <div>
+        <div class="module-title">Monthly Summary (3B Style)</div>
+        <div class="module-subtitle">Auto-calculated GST liability and ITC — for GSTR-3B filing</div>
+      </div>
+      <div class="module-actions">
+        <button class="btn btn-outline" onclick="renderSummary()">↻ Refresh</button>
+        <button class="btn btn-primary" onclick="window.print()">🖨 Print</button>
+      </div>
+    </div>
+    <div id="summary-content"></div>
+  </div>
+
+  <!-- ===== MODULE 7: PAYMENT ===== -->
+  <div id="mod-payment" class="module">
+    <div class="module-header">
+      <div>
+        <div class="module-title">Payment Summary</div>
+        <div class="module-subtitle">Month-wise GST liability and cash payment</div>
+      </div>
+    </div>
+    <div class="filter-bar">
+      <label>Select Month:</label>
+      <select id="payment-month-select" onchange="renderPayment()">
+      </select>
+    </div>
+    <div id="payment-content"></div>
+  </div>
+
+  <!-- ===== SETTINGS ===== -->
+  <div id="mod-settings" class="module">
+    <div class="module-header">
+      <div class="module-title">Settings</div>
+    </div>
+    <div class="settings-section">
+      <h3>Company Details</h3>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Company Name</label>
+          <input type="text" id="s-company" placeholder="Your Company Name">
+        </div>
+        <div class="form-group">
+          <label>GSTIN</label>
+          <input type="text" id="s-gstin" placeholder="06XXXXX">
+        </div>
+        <div class="form-group">
+          <label>Financial Year</label>
+          <input type="text" id="s-fy" value="2026-27" readonly>
+        </div>
+        <div class="form-group">
+          <label>State Code</label>
+          <input type="text" id="s-state" value="06">
+        </div>
+      </div>
+    </div>
+    <div class="settings-section">
+      <h3>Tax Rates</h3>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>GST Rate (%)</label>
+          <input type="number" id="s-gst-rate" value="18">
+        </div>
+        <div class="form-group">
+          <label>RCM Fixed CGST/SGST (₹)</label>
+          <input type="number" id="s-rcm-fixed" value="9265.41" step="0.01">
+        </div>
+        <div class="form-group">
+          <label>RCM IGST Rate (%)</label>
+          <input type="number" id="s-rcm-igst-rate" value="9">
+        </div>
+      </div>
+    </div>
+    <button class="btn btn-success" onclick="saveSettings()">💾 Save Settings</button>
+  </div>
+
+</div><!-- end main-content -->
+
+<!-- ===== MODALS ===== -->
+<!-- SALES MODAL -->
+<div class="modal-overlay" id="modal-sales">
+  <div class="modal">
+    <div class="modal-title">
+      <span id="sales-modal-title">Add Sales Invoice</span>
+      <button class="modal-close" onclick="closeModal('sales')">×</button>
+    </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Month *</label>
+        <select id="s-month"></select>
+      </div>
+      <div class="form-group">
+        <label>Date *</label>
+        <input type="date" id="s-date">
+      </div>
+      <div class="form-group" style="grid-column:span 2">
+        <label>Party Name *</label>
+        <input type="text" id="s-party" placeholder="Enter party name">
+      </div>
+      <div class="form-group" style="grid-column:span 2">
+        <label>GSTIN / UIN</label>
+        <input type="text" id="s-gstin-party" placeholder="15-char GSTIN" oninput="calcSalesTax()" style="text-transform:uppercase">
+      </div>
+      <div class="form-group">
+        <label>Invoice No.</label>
+        <input type="text" id="s-inv-no" placeholder="GTPL/26-27/0001">
+      </div>
+      <div class="form-group">
+        <label>Taxable Amount (₹) *</label>
+        <input type="number" id="s-taxable" step="0.01" oninput="calcSalesTax()">
+      </div>
+      <div class="form-group">
+        <label>IGST (₹)</label>
+        <input type="number" id="s-igst" class="calc" readonly step="0.01">
+      </div>
+      <div class="form-group">
+        <label>CGST (₹)</label>
+        <input type="number" id="s-cgst" class="calc" readonly step="0.01">
+      </div>
+      <div class="form-group">
+        <label>SGST (₹)</label>
+        <input type="number" id="s-sgst" class="calc" readonly step="0.01">
+      </div>
+      <div class="form-group">
+        <label>OOP / Other (₹)</label>
+        <input type="number" id="s-oop" step="0.01" value="0">
+      </div>
+      <div class="form-group">
+        <label>Invoice Total (₹)</label>
+        <input type="number" id="s-total" class="calc" readonly step="0.01">
+      </div>
+      <div class="form-group">
+        <label>Status</label>
+        <select id="s-status">
+          <option>Active</option>
+          <option>Cancelled</option>
+        </select>
+      </div>
+      <div class="form-group full">
+        <label>Remarks</label>
+        <input type="text" id="s-remarks" placeholder="Optional remarks">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('sales')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveSales()">Save Invoice</button>
+    </div>
+  </div>
+</div>
+
+<!-- RETURNS MODAL -->
+<div class="modal-overlay" id="modal-returns">
+  <div class="modal">
+    <div class="modal-title">
+      <span>Add Credit Note</span>
+      <button class="modal-close" onclick="closeModal('returns')">×</button>
+    </div>
+    <div class="form-grid">
+      <div class="form-group"><label>Month *</label><select id="r-month"></select></div>
+      <div class="form-group"><label>Date *</label><input type="date" id="r-date"></div>
+      <div class="form-group" style="grid-column:span 2"><label>Party Name *</label><input type="text" id="r-party"></div>
+      <div class="form-group" style="grid-column:span 2"><label>GSTIN</label><input type="text" id="r-gstin-party" oninput="calcReturnTax()" style="text-transform:uppercase"></div>
+      <div class="form-group"><label>CN Number</label><input type="text" id="r-cn-no" placeholder="CN-00001"></div>
+      <div class="form-group"><label>Original Invoice No.</label><input type="text" id="r-orig-inv"></div>
+      <div class="form-group full"><label>Reason</label><input type="text" id="r-reason" placeholder="Reason for credit note"></div>
+      <div class="form-group"><label>Taxable Amount (₹) *</label><input type="number" id="r-taxable" step="0.01" oninput="calcReturnTax()"></div>
+      <div class="form-group"><label>IGST (₹)</label><input type="number" id="r-igst" class="calc" readonly></div>
+      <div class="form-group"><label>CGST (₹)</label><input type="number" id="r-cgst" class="calc" readonly></div>
+      <div class="form-group"><label>SGST (₹)</label><input type="number" id="r-sgst" class="calc" readonly></div>
+      <div class="form-group"><label>Total (₹)</label><input type="number" id="r-total" class="calc" readonly></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('returns')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveReturn()">Save Credit Note</button>
+    </div>
+  </div>
+</div>
+
+<!-- PURCHASE MODAL -->
+<div class="modal-overlay" id="modal-purchase">
+  <div class="modal">
+    <div class="modal-title">
+      <span id="purchase-modal-title">Add Purchase Invoice</span>
+      <button class="modal-close" onclick="closeModal('purchase')">×</button>
+    </div>
+    <div class="form-grid">
+      <div class="form-group"><label>Month *</label><select id="p-month"></select></div>
+      <div class="form-group"><label>Date *</label><input type="date" id="p-date"></div>
+      <div class="form-group" style="grid-column:span 2"><label>Supplier Name *</label><input type="text" id="p-supplier"></div>
+      <div class="form-group" style="grid-column:span 2"><label>Supplier GSTIN</label><input type="text" id="p-gstin" style="text-transform:uppercase"></div>
+      <div class="form-group"><label>Invoice No.</label><input type="text" id="p-inv-no"></div>
+      <div class="form-group"><label>Taxable Amount (₹) *</label><input type="number" id="p-taxable" step="0.01" oninput="calcPurchaseTax()"></div>
+      <div class="form-group"><label>IGST (₹)</label><input type="number" id="p-igst" step="0.01" oninput="calcPurchaseTotal()"></div>
+      <div class="form-group"><label>CGST (₹)</label><input type="number" id="p-cgst" step="0.01" oninput="calcPurchaseTotal()"></div>
+      <div class="form-group"><label>SGST (₹)</label><input type="number" id="p-sgst" step="0.01" oninput="calcPurchaseTotal()"></div>
+      <div class="form-group"><label>Invoice Total (₹)</label><input type="number" id="p-total" class="calc" readonly></div>
+      <div class="form-group"><label>ITC Eligible?</label>
+        <select id="p-itc" onchange="calcPurchaseTotal()">
+          <option>Yes</option><option>No</option><option>Partial</option>
+        </select>
+      </div>
+      <div class="form-group"><label>ITC Amount (₹)</label><input type="number" id="p-itc-amt" step="0.01" placeholder="Auto or manual"></div>
+      <div class="form-group full"><label>Remarks</label><input type="text" id="p-remarks"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('purchase')">Cancel</button>
+      <button class="btn btn-primary" onclick="savePurchase()">Save Purchase</button>
+    </div>
+  </div>
+</div>
+
+<!-- RCM MODAL -->
+<div class="modal-overlay" id="modal-rcm">
+  <div class="modal">
+    <div class="modal-title">
+      <span>Add RCM Entry</span>
+      <button class="modal-close" onclick="closeModal('rcm')">×</button>
+    </div>
+    <div class="form-grid">
+      <div class="form-group"><label>Month *</label><select id="rcm-month"></select></div>
+      <div class="form-group"><label>Date *</label><input type="date" id="rcm-date"></div>
+      <div class="form-group" style="grid-column:span 2"><label>Supplier Name</label><input type="text" id="rcm-supplier"></div>
+      <div class="form-group" style="grid-column:span 2"><label>Nature of Service</label><input type="text" id="rcm-nature" placeholder="e.g. Import of Software Services"></div>
+      <div class="form-group"><label>Taxable Value (₹)</label><input type="number" id="rcm-taxable" step="0.01" oninput="calcRcmTax()"></div>
+      <div class="form-group"><label>IGST (₹)</label><input type="number" id="rcm-igst" step="0.01"></div>
+      <div class="form-group"><label>CGST (₹)</label><input type="number" id="rcm-cgst" step="0.01"></div>
+      <div class="form-group"><label>SGST (₹)</label><input type="number" id="rcm-sgst" step="0.01"></div>
+      <div class="form-group"><label>Total Tax (₹)</label><input type="number" id="rcm-total" class="calc" readonly></div>
+      <div class="form-group"><label>RCM Tax Paid?</label>
+        <select id="rcm-paid"><option>Yes</option><option>No</option></select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('rcm')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveRcm()">Save RCM Entry</button>
+    </div>
+  </div>
+</div>
+
+<!-- 2B MODAL -->
+<div class="modal-overlay" id="modal-2b">
+  <div class="modal">
+    <div class="modal-title">
+      <span>Add GSTR-2B Entry</span>
+      <button class="modal-close" onclick="closeModal('2b')">×</button>
+    </div>
+    <div class="form-grid">
+      <div class="form-group"><label>Month *</label><select id="b2-month"></select></div>
+      <div class="form-group"><label>Invoice Date *</label><input type="date" id="b2-date"></div>
+      <div class="form-group" style="grid-column:span 2"><label>Supplier Name</label><input type="text" id="b2-supplier"></div>
+      <div class="form-group" style="grid-column:span 2"><label>Supplier GSTIN</label><input type="text" id="b2-gstin" style="text-transform:uppercase"></div>
+      <div class="form-group"><label>Invoice No.</label><input type="text" id="b2-inv-no"></div>
+      <div class="form-group"><label>Taxable Amount (₹)</label><input type="number" id="b2-taxable" step="0.01"></div>
+      <div class="form-group"><label>IGST (₹)</label><input type="number" id="b2-igst" step="0.01"></div>
+      <div class="form-group"><label>CGST (₹)</label><input type="number" id="b2-cgst" step="0.01"></div>
+      <div class="form-group"><label>SGST (₹)</label><input type="number" id="b2-sgst" step="0.01"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('2b')">Cancel</button>
+      <button class="btn btn-primary" onclick="save2B()">Save 2B Entry</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== IMPORT MODAL ===== -->
+<div class="modal-overlay" id="modal-import">
+  <div class="modal import-modal">
+    <div class="modal-title">
+      <span>📂 Import Data Workbook</span>
+      <button class="modal-close" onclick="closeImport()">×</button>
+    </div>
+
+    <!-- Instructions banner -->
+    <div class="template-info">
+      <div style="font-weight:700;margin-bottom:8px;color:#93c5fd;font-size:12px">📋 HOW TO USE — One workbook, all modules</div>
+      <div style="font-size:11px;color:#cbd5e1;line-height:1.8">
+        1. Click <strong style="color:#fde68a">⬇ Download Template</strong> to get the master workbook with 5 sheets already formatted.<br>
+        2. Fill in each sheet — <strong>Sales</strong>, <strong>Credit Notes</strong>, <strong>Purchase</strong>, <strong>RCM</strong>, <strong>GSTR-2B</strong>.<br>
+        3. Save and upload it here — the tool reads every sheet and previews before importing.
+      </div>
+      <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px">
+        <span class="col-tag required">Sales</span>
+        <span class="col-tag required">Credit Notes</span>
+        <span class="col-tag required">Purchase</span>
+        <span class="col-tag required">RCM</span>
+        <span class="col-tag required">GSTR-2B</span>
+        <span class="col-tag" style="margin-left:8px">Month: Apr-26 … Mar-27</span>
+        <span class="col-tag">Date: DD-MM-YYYY</span>
+        <span class="col-tag">Tax auto-calculated from GSTIN if blank</span>
+      </div>
+    </div>
+
+    <!-- STEP 1: Select Month -->
+    <div style="margin-bottom:14px">
+      <div style="font-size:11px;font-weight:700;color:var(--gray5);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:8px">STEP 1 — Select Month for this Import</div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <select id="import-month-select" style="padding:8px 14px;border-radius:var(--radius);border:1.5px solid var(--blue);background:var(--surface2);color:var(--gray8);font-size:13px;font-weight:600;min-width:140px" onchange="onImportMonthChange()">
+          <option value="">— Select Month —</option>
+          <option value="Apr-26">April 2026</option>
+          <option value="May-26">May 2026</option>
+          <option value="Jun-26">June 2026</option>
+          <option value="Jul-26">July 2026</option>
+          <option value="Aug-26">August 2026</option>
+          <option value="Sep-26">September 2026</option>
+          <option value="Oct-26">October 2026</option>
+          <option value="Nov-26">November 2026</option>
+          <option value="Dec-26">December 2026</option>
+          <option value="Jan-27">January 2027</option>
+          <option value="Feb-27">February 2027</option>
+          <option value="Mar-27">March 2027</option>
+        </select>
+        <span id="import-month-hint" style="font-size:12px;color:var(--amber)">⚠ Please select a month first</span>
+      </div>
+    </div>
+
+    <!-- STEP 2: Upload File -->
+    <div id="import-file-section" style="opacity:0.4;pointer-events:none">
+      <div style="font-size:11px;font-weight:700;color:var(--gray5);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:8px">STEP 2 — Upload your Excel Workbook</div>
+
+      <!-- Drop zone -->
+      <div class="import-zone" id="import-dropzone" onclick="document.getElementById('import-file-input').click()" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+        <div class="zone-icon">📊</div>
+        <p id="import-zone-text"><strong>Click to browse</strong> or drag &amp; drop your Excel workbook here</p>
+        <p style="margin-top:4px;font-size:11px">Accepts .xlsx files only</p>
+        <input type="file" id="import-file-input" accept=".xlsx" onchange="handleFileSelect(event)">
+      </div>
+    </div>
+    <div id="import-preview-area" style="display:none">
+      <div style="font-size:11px;font-weight:700;color:var(--gray5);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:8px">STEP 2 — Review each sheet before importing</div>
+
+      <!-- Sheet tab selector -->
+      <div id="import-sheet-tabs" style="display:flex;gap:4px;margin-bottom:10px;flex-wrap:wrap"></div>
+
+      <!-- Stats for active sheet -->
+      <div class="import-stats" id="import-stats"></div>
+
+      <!-- Preview table -->
+      <div class="preview-table-wrap">
+        <table>
+          <thead id="import-preview-head"></thead>
+          <tbody id="import-preview-body"></tbody>
+        </table>
+      </div>
+
+      <!-- Overall summary -->
+      <div id="import-overall-summary" style="padding:10px 12px;background:var(--green-light);border-radius:var(--radius);font-size:12px;color:var(--gray7);margin-top:8px"></div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-tpl" onclick="downloadMasterTemplate()">⬇ Download Template</button>
+      <button class="btn btn-outline" onclick="closeImport()">Cancel</button>
+      <button class="btn btn-success" id="import-confirm-btn" style="display:none" onclick="confirmImport()">✅ Import All Valid Rows</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div id="toast"></div>
+
+<script>
+// ===============================================================
+// SUPABASE AUTH
+// ===============================================================
+const SUPABASE_URL  = 'https://ddnfbmakjfnglzlwqvmp.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkbmZibWFramZuZ2x6bHdxdm1wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk1MjE2ODIsImV4cCI6MjA5NTA5NzY4Mn0.tx4DmNyU1XKSm1pjcctCmtDdTVfSC0cL1nI7jpEFcUk';
+
+const _supa = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+let CURRENT_USER   = null; // supabase auth user
+let CURRENT_PROFILE = null; // { id, username, role, is_active }
+
+// ── Login ──
+let _adminEmail = '';
+let _adminPass  = '';
+
+async function doLogin() {
+  let email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+
+  // If user typed just a username (no @), append @gst.local
+  if (email && !email.includes('@')) email = email + '@gsttool.app';
+  const errEl    = document.getElementById('login-error');
+  const btn      = document.getElementById('login-btn');
+
+  errEl.classList.remove('show');
+  if (!email || !password) { errEl.textContent = 'Please enter email and password.'; errEl.classList.add('show'); return; }
+
+  btn.disabled = true; btn.textContent = 'Signing in…';
+
+  const { data, error } = await _supa.auth.signInWithPassword({ email, password });
+
+  if (error) {
+    errEl.textContent = 'Invalid email or password. Please try again.';
+    errEl.classList.add('show');
+    btn.disabled = false; btn.textContent = 'Sign In';
+    return;
+  }
+
+  CURRENT_USER = data.user;
+  _adminEmail  = email;
+  _adminPass   = password;
+  await loadProfileAndLaunch();
+}
+
+// ── Load profile and decide which screen to show ──
+async function loadProfileAndLaunch() {
+  const { data: profile, error } = await _supa
+    .from('profiles')
+    .select('*')
+    .eq('id', CURRENT_USER.id)
+    .single();
+
+  if (error || !profile) {
+    await _supa.auth.signOut();
+    const errEl = document.getElementById('login-error');
+    errEl.textContent = 'Account not configured. Please contact admin.';
+    errEl.classList.add('show');
+    document.getElementById('login-btn').disabled = false;
+    document.getElementById('login-btn').textContent = 'Sign In';
+    return;
+  }
+
+  if (!profile.is_active) {
+    await _supa.auth.signOut();
+    const errEl = document.getElementById('login-error');
+    errEl.textContent = 'Your account has been deactivated. Contact admin.';
+    errEl.classList.add('show');
+    document.getElementById('login-btn').disabled = false;
+    document.getElementById('login-btn').textContent = 'Sign In';
+    return;
+  }
+
+  CURRENT_PROFILE = profile;
+
+  // Hide login screen
+  document.getElementById('login-screen').classList.remove('visible');
+  document.getElementById('login-btn').disabled = false;
+  document.getElementById('login-btn').textContent = 'Sign In';
+
+  if (profile.role === 'admin') {
+    showAdminPanel();
+  } else {
+    showAppForUser();
+  }
+}
+
+// ── Logout ──
+async function doLogout() {
+  stopCompanySync();
+  await _supa.auth.signOut({ scope: 'global' });
+  // Clear all local storage to ensure no session leaks
+  try {
+    const keys = Object.keys(localStorage).filter(k => k.startsWith('sb-'));
+    keys.forEach(k => localStorage.removeItem(k));
+  } catch(e) {}
+  CURRENT_USER    = null;
+  CURRENT_PROFILE = null;
+  _adminEmail     = '';
+  _adminPass      = '';
+  document.getElementById('admin-panel').classList.remove('visible');
+  document.getElementById('app-wrapper').style.display = 'none';
+  document.getElementById('login-email').value    = '';
+  document.getElementById('login-password').value = '';
+  document.getElementById('login-error').classList.remove('show');
+  document.getElementById('login-screen').classList.add('visible');
+}
+
+// ── Show app for regular user ──
+function showAppForUser() {
+  document.getElementById('app-wrapper').style.display = 'block';
+  const area = document.getElementById('header-user-area');
+  if (area && CURRENT_PROFILE.role !== 'admin') {
+    area.innerHTML = `
+      <div class="user-info-bar">
+        <div class="user-avatar">${(CURRENT_PROFILE.username||'U')[0]}</div>
+        <span class="user-name-label">${CURRENT_PROFILE.username}</span>
+        <button class="btn-header" onclick="doLogout()" style="color:#f87171;border-color:rgba(248,113,113,0.3);margin-left:4px">🚪 Logout</button>
+      </div>`;
+  }
+  loadUserDataFromSupabase();
+}
+
+// ── Show admin panel ──
+function showAdminPanel() {
+  document.getElementById('admin-panel').classList.add('visible');
+  document.getElementById('admin-user-label').textContent = `Logged in as: ${CURRENT_PROFILE.username} (Admin)`;
+  loadAdminCompanies();
+}
+
+// ── Admin: load all users ──
+// ── Admin tab switching ──
+function switchAdminTab(tab) {
+  ['companies','users'].forEach(t => {
+    document.getElementById(`admin-tab-${t}`).style.display = t === tab ? 'block' : 'none';
+    const el = document.getElementById(`atab-${t}`);
+    if (el) {
+      el.style.color      = t === tab ? '#fff' : 'rgba(255,255,255,0.5)';
+      el.style.borderBottom = t === tab ? '2px solid var(--blue)' : '2px solid transparent';
+    }
+  });
+  if (tab === 'companies') loadAdminCompanies();
+  if (tab === 'users')     { loadAdminUsers(); populateUserCompanyDropdown(); }
+}
+
+// ── Admin: create company ──
+async function adminCreateCompany() {
+  const name  = document.getElementById('new-company-name').value.trim();
+  const gstin = document.getElementById('new-company-gstin').value.trim().toUpperCase();
+  const errEl = document.getElementById('create-company-error');
+  const okEl  = document.getElementById('create-company-success');
+  const btn   = document.getElementById('create-company-btn');
+  errEl.style.display = 'none'; okEl.style.display = 'none';
+  if (!name) { errEl.textContent = 'Company name is required.'; errEl.style.display = 'block'; return; }
+  btn.disabled = true; btn.textContent = 'Creating…';
+  const { data, error } = await _supa.from('companies').insert({ name, gstin: gstin||null }).select().single();
+  if (error) {
+    errEl.textContent = 'Error: ' + error.message; errEl.style.display = 'block';
+  } else {
+    okEl.textContent = `✅ "${name}" created! Company ID: ${data.id} (copy this for adding users)`;
+    okEl.style.display = 'block';
+    document.getElementById('new-company-name').value = '';
+    document.getElementById('new-company-gstin').value = '';
+    loadAdminCompanies();
+  }
+  btn.disabled = false; btn.textContent = '+ Create Company';
+}
+
+// ── Admin: load companies ──
+async function loadAdminCompanies() {
+  const bodyEl = document.getElementById('admin-companies-body');
+  if (!bodyEl) return;
+  bodyEl.innerHTML = '<div style="padding:20px;text-align:center;color:var(--gray5)">Loading…</div>';
+  const { data: companies, error } = await _supa.from('companies').select('*').order('created_at', { ascending: false });
+  if (error) { bodyEl.innerHTML = `<div style="padding:20px;color:var(--red)">Error: ${error.message}</div>`; return; }
+  if (!companies || companies.length === 0) {
+    bodyEl.innerHTML = '<div style="padding:24px;text-align:center;color:var(--gray5)">No companies yet. Create one above.</div>'; return;
+  }
+  bodyEl.innerHTML = `
+    <table class="users-table">
+      <thead><tr><th>Company</th><th>GSTIN</th><th>Company ID (for SQL)</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody>${companies.map(c => `
+        <tr>
+          <td><strong>${c.name}</strong></td>
+          <td style="font-family:var(--font-mono);font-size:11px">${c.gstin||'—'}</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:6px">
+              <code style="font-size:10px;background:var(--gray1);padding:2px 6px;border-radius:3px;font-family:var(--font-mono)">${c.id}</code>
+              <button onclick="copyText('${c.id}')" style="background:none;border:1px solid var(--gray3);border-radius:3px;padding:2px 6px;font-size:10px;cursor:pointer">📋 Copy</button>
+            </div>
+          </td>
+          <td>${c.is_active ? '<span class="badge-active">● Active</span>' : '<span class="badge-inactive">● Inactive</span>'}</td>
+          <td>
+            <div class="user-row-actions">
+              <button class="btn btn-outline btn-sm" onclick="adminViewCompanyData('${c.id}','${c.name.replace(/'/g,"\\'")}')">📊 View GST Data</button>
+              <button class="btn btn-outline btn-sm" onclick="adminToggleCompany('${c.id}',${!c.is_active})">${c.is_active ? '⊘ Deactivate' : '✓ Activate'}</button>
+              <button class="btn btn-sm" style="background:var(--red-light);color:var(--red);border:1px solid #fca5a5" onclick="adminDeleteCompany('${c.id}','${c.name.replace(/'/g,"\\'")}')">🗑 Delete</button>
+            </div>
+          </td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+async function adminToggleCompany(id, state) { await _supa.from('companies').update({ is_active: state }).eq('id', id); loadAdminCompanies(); }
+async function adminDeleteCompany(id, name) {
+  if (!confirm(`Delete "${name}" and ALL their GST data? Cannot be undone.`)) return;
+  await _supa.from('companies').delete().eq('id', id); loadAdminCompanies();
+}
+
+// ── Admin: view company GST data ──
+async function adminViewCompanyData(companyId, companyName) {
+  document.getElementById('admin-panel').classList.remove('visible');
+
+  // Completely reset DB — ignore any localStorage data
+  DB.sales=[]; DB.returns=[]; DB.purchase=[]; DB.rcm=[]; DB.data2b=[]; DB.recoDecisions={};
+  // Clear localStorage so old data doesn't bleed in
+  ['sales','returns','purchase','rcm','data2b'].forEach(k => saveDataKey(k, []));
+
+  CURRENT_VIEWING_USER = { id: companyId, username: companyName, isCompany: true };
+
+  // Load ONLY from Supabase for this company
+  const { data: rows } = await _supa.from('gst_data').select('data_key,data_value').eq('company_id', companyId);
+  if (rows) rows.forEach(r => { if (DB.hasOwnProperty(r.data_key)) DB[r.data_key] = r.data_value; });
+
+  document.getElementById('app-wrapper').style.display = 'block';
+  document.getElementById('hdr-company').textContent = companyName;
+  refreshAll();
+
+  // Subscribe to realtime updates for this company
+  subscribeToCompanyRealtime(companyId);
+
+  const area = document.getElementById('header-user-area');
+  if (area) area.innerHTML = `
+    <div class="user-info-bar">
+      <div class="user-avatar" style="background:var(--amber)">🏢</div>
+      <span class="user-name-label" style="color:#fcd34d">Viewing: ${companyName}</span>
+      <button class="btn-header" style="background:#0f766e;color:#fff;border-color:#0f766e;margin-left:4px" onclick="adminRefreshCompanyData('${companyId}','${companyName.replace(/'/g,"\\'")}')">🔄 Refresh</button>
+      <button class="btn-header" style="background:#7c3aed;color:#fff;border-color:#7c3aed;margin-left:4px" onclick="backToAdminPanel()">⬅ Admin Panel</button>
+      <button class="btn-header" onclick="doLogout()" style="color:#f87171;margin-left:4px">🚪 Logout</button>
+    </div>`;
+}
+
+// ── Admin: manually refresh company data ──
+async function adminRefreshCompanyData(companyId, companyName) {
+  DB.sales=[]; DB.returns=[]; DB.purchase=[]; DB.rcm=[]; DB.data2b=[]; DB.recoDecisions={};
+  const { data: rows } = await _supa.from('gst_data').select('data_key,data_value').eq('company_id', companyId);
+  if (rows) rows.forEach(r => { if (DB.hasOwnProperty(r.data_key)) DB[r.data_key] = r.data_value; });
+  refreshAll();
+  showToast('✅ Data refreshed');
+}
+
+function copyText(text) { navigator.clipboard.writeText(text).then(() => showToast('Copied!')); }
+function copySQLTemplate() { const sql = document.getElementById('sql-template').textContent; navigator.clipboard.writeText(sql).then(() => showToast('SQL copied!')); }
+
+async function loadAdminUsers() {
+  const bodyEl = document.getElementById('admin-users-body');
+  if (!bodyEl) return;
+  bodyEl.innerHTML = '<div style="padding:20px;text-align:center;color:var(--gray5)">Loading…</div>';
+  const { data: users, error } = await _supa.from('profiles').select('*, companies(name)').order('created_at', { ascending: false });
+  if (error) { bodyEl.innerHTML = `<div style="padding:20px;color:var(--red)">Error: ${error.message}</div>`; return; }
+  if (!users || users.length === 0) { bodyEl.innerHTML = '<div style="padding:20px;text-align:center;color:var(--gray5)">No users yet.</div>'; return; }
+  bodyEl.innerHTML = `
+    <table class="users-table">
+      <thead><tr><th>Username</th><th>Company</th><th>Role</th><th>Status</th><th>Created</th><th>Actions</th></tr></thead>
+      <tbody>${users.map(u => `
+        <tr>
+          <td><strong>${u.username}</strong></td>
+          <td style="font-size:12px;color:var(--gray6)">${u.companies?.name || '—'}</td>
+          <td><span style="font-size:11px;background:${u.role==='admin'?'#dbeafe':'var(--gray1)'};color:${u.role==='admin'?'#1e40af':'var(--gray6)'};padding:2px 8px;border-radius:20px;font-weight:600">${u.role}</span></td>
+          <td>${u.is_active ? '<span class="badge-active">● Active</span>' : '<span class="badge-inactive">● Inactive</span>'}</td>
+          <td style="color:var(--gray5);font-size:12px">${new Date(u.created_at).toLocaleDateString('en-IN')}</td>
+          <td>
+            <div class="user-row-actions">
+              ${u.role !== 'admin' ? `
+                <button class="btn btn-outline btn-sm" style="background:#fef3c7;border-color:#fbbf24;color:#92400e" onclick="adminShowCredentials('${u.id}','${u.username}','${u.login_username||''}')">🔑 Credentials</button>
+                <button class="btn btn-outline btn-sm" onclick="adminToggleUser('${u.id}',${!u.is_active})">${u.is_active ? '⊘ Deactivate' : '✓ Activate'}</button>
+                <button class="btn btn-sm" style="background:var(--red-light);color:var(--red);border:1px solid #fca5a5" onclick="adminDeleteUser('${u.id}','${u.username}')">🗑 Delete</button>
+              ` : '<span style="color:var(--gray4);font-size:12px">— Admin —</span>'}
+            </div>
+          </td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+// ── Admin: populate company dropdown in Users tab ──
+async function populateUserCompanyDropdown() {
+  const sel = document.getElementById('new-user-company');
+  if (!sel) return;
+  const { data: companies } = await _supa.from('companies').select('id,name').eq('is_active', true).order('name');
+  sel.innerHTML = '<option value="">— Select Company —</option>';
+  if (companies) companies.forEach(c => {
+    const o = document.createElement('option');
+    o.value = c.id; o.textContent = c.name;
+    sel.appendChild(o);
+  });
+}
+
+// ── Admin: create user (no email confirmation needed) ──
+async function adminCreateUser() {
+  const name      = document.getElementById('new-user-name').value.trim();
+  const username  = document.getElementById('new-user-username').value.trim().toLowerCase().replace(/\s+/g,'').replace(/@.*$/,'');
+  const password  = document.getElementById('new-user-password').value;
+  const companyId = document.getElementById('new-user-company').value;
+  const errEl     = document.getElementById('create-user-error');
+  const okEl      = document.getElementById('create-user-success');
+  const btn       = document.getElementById('create-user-btn');
+
+  errEl.style.display = 'none'; okEl.style.display = 'none';
+  if (!name || !username || !password) { errEl.textContent = 'Name, username and password are required.'; errEl.style.display = 'block'; return; }
+  if (password.length < 8)             { errEl.textContent = 'Password must be at least 8 characters.';  errEl.style.display = 'block'; return; }
+
+  // Use username@gsttool.app as email — valid format, no real email sent
+  const fakeEmail = `${username}@gsttool.app`;
+
+  btn.disabled = true; btn.textContent = 'Creating…';
+
+  const { data, error } = await _supa.auth.signUp({ email: fakeEmail, password });
+
+  if (error) {
+    errEl.textContent = 'Error: ' + error.message;
+    errEl.style.display = 'block';
+    btn.disabled = false; btn.textContent = 'Create User';
+    return;
+  }
+
+  if (data?.user) {
+    await _supa.from('profiles').insert({
+      id: data.user.id,
+      username: name,
+      role: 'user',
+      is_active: true,
+      company_id: companyId || null,
+      login_username: username
+    });
+  }
+
+  // Re-login as admin silently
+  await _supa.auth.signInWithPassword({ email: _adminEmail, password: _adminPass });
+
+  okEl.innerHTML = `✅ User <strong>${name}</strong> created!<br>
+    Login email: <code style="background:var(--gray1);padding:1px 6px;border-radius:3px">${fakeEmail}</code><br>
+    Password: <code style="background:var(--gray1);padding:1px 6px;border-radius:3px">${password}</code><br>
+    Share these credentials with the user.`;
+  okEl.style.display = 'block';
+
+  document.getElementById('new-user-name').value     = '';
+  document.getElementById('new-user-username').value = '';
+  document.getElementById('new-user-password').value = '';
+  document.getElementById('new-user-company').value  = '';
+  btn.disabled = false; btn.textContent = 'Create User';
+  loadAdminUsers();
+}
+
+// ── Admin: open GST tool — pick a company first ──
+async function adminOpenGSTTool() {
+  const { data: companies } = await _supa.from('companies').select('id,name').eq('is_active', true).order('name');
+  if (!companies || companies.length === 0) {
+    showToast('No companies yet. Create one first.'); return;
+  }
+  if (companies.length === 1) {
+    adminViewCompanyData(companies[0].id, companies[0].name); return;
+  }
+  // Show picker
+  const opts = companies.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+  const pick = document.createElement('div');
+  pick.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:99998;display:flex;align-items:center;justify-content:center';
+  pick.innerHTML = `
+    <div style="background:#fff;border-radius:16px;padding:28px;width:360px;box-shadow:0 25px 60px rgba(0,0,0,0.3)">
+      <h3 style="font-size:15px;font-weight:700;color:var(--navy);margin-bottom:16px">Select Company to View</h3>
+      <select id="admin-company-picker" style="width:100%;padding:10px 12px;border:1.5px solid var(--gray2);border-radius:var(--radius);font-size:13px;font-family:var(--font-main);margin-bottom:16px">
+        ${opts}
+      </select>
+      <div style="display:flex;gap:8px">
+        <button onclick="this.closest('div[style]').remove()" class="btn btn-outline" style="flex:1">Cancel</button>
+        <button onclick="const s=document.getElementById('admin-company-picker');const t=s.options[s.selectedIndex].text;this.closest('div[style]').remove();adminViewCompanyData(s.value,t)" class="btn btn-primary" style="flex:1">Open</button>
+      </div>
+    </div>`;
+  document.body.appendChild(pick);
+}
+
+// ── Admin: view a specific user's data ──
+async function adminViewUserData(userId, username) {
+  document.getElementById('admin-panel').classList.remove('visible');
+
+  // Reset DB to empty then load this user's data
+  DB.sales = []; DB.returns = []; DB.purchase = []; DB.rcm = []; DB.data2b = []; DB.recoDecisions = {};
+  CURRENT_VIEWING_USER = { id: userId, username };
+
+  const { data: rows } = await _supa
+    .from('gst_data')
+    .select('data_key, data_value')
+    .eq('user_id', userId);
+
+  if (rows) {
+    rows.forEach(r => { if (DB.hasOwnProperty(r.data_key)) DB[r.data_key] = r.data_value; });
+  }
+
+  document.getElementById('app-wrapper').style.display = 'block';
+  refreshAll();
+
+  // Update header to show whose data we're viewing
+  const area = document.getElementById('header-user-area');
+  if (area) {
+    area.innerHTML = `
+      <div class="user-info-bar">
+        <div class="user-avatar" style="background:var(--amber)">${username[0]}</div>
+        <span class="user-name-label" style="color:#fcd34d">Viewing: ${username}</span>
+        <button class="btn-header" style="background:#7c3aed;color:#fff;border-color:#7c3aed;margin-left:4px" onclick="backToAdminPanel()">⬅ Admin Panel</button>
+        <button class="btn-header" onclick="doLogout()" style="color:#f87171;border-color:rgba(248,113,113,0.3);margin-left:4px">🚪 Logout</button>
+      </div>`;
+  }
+}
+
+// ── Admin: go back to admin panel from GST tool ──
+function backToAdminPanel() {
+  stopCompanySync();
+  document.getElementById('app-wrapper').style.display = 'none';
+  CURRENT_VIEWING_USER = null;
+  DB.sales=[]; DB.returns=[]; DB.purchase=[]; DB.rcm=[]; DB.data2b=[]; DB.recoDecisions={};
+  showAdminPanel();
+}
+
+let CURRENT_VIEWING_USER = null;
+async function adminToggleUser(userId, newState) {
+  await _supa.from('profiles').update({ is_active: newState }).eq('id', userId);
+  loadAdminUsers();
+}
+
+// ── Admin: delete user ──
+async function adminDeleteUser(userId, username) {
+  if (!confirm(`Delete user "${username}"? This will also delete all their GST data.`)) return;
+  await _supa.from('profiles').delete().eq('id', userId);
+  loadAdminUsers();
+}
+
+// ── Admin: delete user ──
+async function adminDeleteUser(userId, username) {
+  if (!confirm(`Delete user "${username}"? This will also delete all their GST data.`)) return;
+  await _supa.from('profiles').delete().eq('id', userId);
+  loadAdminUsers();
+}
+
+// ── Admin: show credentials modal ──
+let _credUserId = null;
+
+function adminShowCredentials(userId, displayName, loginUsername) {
+  _credUserId = userId;
+  const loginEmail = loginUsername
+    ? `${loginUsername}@gsttool.app`
+    : '<span style="color:var(--amber)">Not available (created via SQL)</span>';
+  document.getElementById('credentials-content').innerHTML = `
+    <div style="background:var(--gray0);border:1px solid var(--gray2);border-radius:var(--radius);padding:16px">
+      <div style="margin-bottom:14px">
+        <div style="font-size:11px;font-weight:600;color:var(--gray5);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:4px">Display Name</div>
+        <div style="font-size:15px;font-weight:700;color:var(--navy)">${displayName}</div>
+      </div>
+      <div style="margin-bottom:4px">
+        <div style="font-size:11px;font-weight:600;color:var(--gray5);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:6px">Login Email</div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <code style="font-size:13px;background:#fff;border:1px solid var(--gray2);padding:6px 12px;border-radius:var(--radius);font-family:var(--font-mono);color:var(--blue)">${loginUsername ? loginUsername + '@gsttool.app' : '—'}</code>
+          ${loginUsername ? `<button onclick="copyText('${loginUsername}@gsttool.app');this.textContent='✅ Copied'" style="background:var(--blue);color:#fff;border:none;border-radius:4px;padding:4px 10px;font-size:11px;cursor:pointer">📋 Copy</button>` : ''}
+        </div>
+      </div>
+    </div>
+    <p style="font-size:12px;color:var(--gray5);margin-top:10px">💡 Password is not stored for security. Use <strong>Reset Password</strong> below to set a new one and share with the user.</p>`;
+  document.getElementById('reset-password-input').value = '';
+  document.getElementById('reset-password-msg').style.display = 'none';
+  document.getElementById('modal-credentials').style.display = 'flex';
+}
+
+function closeCredentialsModal() {
+  document.getElementById('modal-credentials').style.display = 'none';
+  _credUserId = null;
+}
+
+async function adminResetPassword() {
+  const newPass = document.getElementById('reset-password-input').value.trim();
+  const msgEl   = document.getElementById('reset-password-msg');
+  if (!newPass || newPass.length < 8) {
+    msgEl.style.cssText = 'display:block;color:var(--red);background:var(--red-light);padding:8px 12px;border-radius:var(--radius)';
+    msgEl.textContent = '⚠ Password must be at least 8 characters.';
+    return;
+  }
+  msgEl.style.cssText = 'display:block;color:var(--gray6);background:var(--gray1);padding:8px 12px;border-radius:var(--radius)';
+  msgEl.textContent = 'Resetting…';
+
+  const { error } = await _supa.rpc('reset_user_password', {
+    target_user_id: _credUserId,
+    new_password: newPass
+  });
+
+  if (error) {
+    msgEl.style.cssText = 'display:block;color:#92400e;background:#fef3c7;padding:8px 12px;border-radius:var(--radius)';
+    msgEl.innerHTML = `⚠ Run this in Supabase SQL Editor:<br>
+      <code style="font-size:10px;display:block;margin-top:6px;font-family:var(--font-mono);word-break:break-all">
+        update auth.users set encrypted_password = crypt('${newPass}', gen_salt('bf')) where id = '${_credUserId}';
+      </code>`;
+  } else {
+    msgEl.style.cssText = 'display:block;color:#065f46;background:#d1fae5;padding:8px 12px;border-radius:var(--radius)';
+    msgEl.innerHTML = `✅ Password reset to <strong>"${newPass}"</strong> — share this with the user.`;
+    document.getElementById('reset-password-input').value = '';
+  }
+}
+
+// ── Realtime sync — subscribe to company data changes ──
+let _realtimeChannel = null;
+let _pollInterval    = null;
+let _currentCompanyId = null;
+
+function subscribeToCompanyRealtime(companyId) {
+  _currentCompanyId = companyId;
+
+  // Clear any existing subscription and polling
+  if (_realtimeChannel) { try { _supa.removeChannel(_realtimeChannel); } catch(e){} _realtimeChannel = null; }
+  if (_pollInterval)    { clearInterval(_pollInterval); _pollInterval = null; }
+
+  console.log('🔵 Starting sync for company:', companyId);
+
+  // ── Realtime via postgres_changes ──
+  _realtimeChannel = _supa
+    .channel(`company_${companyId}_${Date.now()}`)
+    .on('postgres_changes', {
+      event: '*',
+      schema: 'public',
+      table: 'gst_data'
+    }, async (payload) => {
+      console.log('🟢 Realtime event received:', payload);
+      const changedCompany = payload.new?.company_id || payload.old?.company_id;
+      if (changedCompany !== companyId) return;
+      const changedKey = payload.new?.data_key || payload.old?.data_key;
+      if (!changedKey || !DB.hasOwnProperty(changedKey)) return;
+      if (_lastSavedKey === changedKey && Date.now() - _lastSavedTime < 5000) return;
+      await reloadCompanyKey(companyId, changedKey);
+      showToast(`🔄 ${changedKey} updated`);
+    })
+    .subscribe((status) => {
+      console.log('🔵 Realtime status:', status);
+      showToast(`Sync: ${status}`);
+    });
+
+  // ── Polling fallback every 10 seconds ──
+  console.log('🟡 Starting 10s polling for company:', companyId);
+  _pollInterval = setInterval(async () => {
+    if (!_currentCompanyId) return;
+    console.log('🟡 Polling...', new Date().toLocaleTimeString());
+    const { data: rows, error } = await _supa
+      .from('gst_data')
+      .select('data_key,data_value')
+      .eq('company_id', _currentCompanyId);
+    if (error) { console.error('Poll error:', error); return; }
+    if (!rows) return;
+    let changed = false;
+    rows.forEach(r => {
+      if (!DB.hasOwnProperty(r.data_key)) return;
+      const newVal = JSON.stringify(r.data_value);
+      const oldVal = JSON.stringify(DB[r.data_key]);
+      if (newVal !== oldVal) {
+        console.log('🟢 Change detected in key:', r.data_key);
+        DB[r.data_key] = r.data_value;
+        changed = true;
+      }
+    });
+    if (changed) { refreshAll(); showToast('🔄 Data synced'); }
+    else { console.log('⚪ No changes found'); }
+  }, 10000);
+}
+
+async function reloadCompanyKey(companyId, key) {
+  const { data } = await _supa
+    .from('gst_data')
+    .select('data_value')
+    .eq('company_id', companyId)
+    .eq('data_key', key)
+    .maybeSingle();
+  if (data && DB.hasOwnProperty(key)) {
+    DB[key] = data.data_value;
+    refreshAll();
+  }
+}
+
+function stopCompanySync() {
+  _currentCompanyId = null;
+  if (_realtimeChannel) { try { _supa.removeChannel(_realtimeChannel); } catch(e){} _realtimeChannel = null; }
+  if (_pollInterval)    { clearInterval(_pollInterval); _pollInterval = null; }
+}
+
+let _lastSavedKey  = null;
+let _lastSavedTime = 0;
+async function loadUserDataFromSupabase() {
+  const uid       = CURRENT_USER.id;
+  const companyId = CURRENT_PROFILE?.company_id || null;
+
+  // Clear localStorage so old data from previous sessions never bleeds in
+  DB.sales=[]; DB.returns=[]; DB.purchase=[]; DB.rcm=[]; DB.data2b=[]; DB.recoDecisions={};
+  ['sales','returns','purchase','rcm','data2b'].forEach(k => saveDataKey(k, []));
+
+  // Show company name in header
+  if (companyId) {
+    const { data: company } = await _supa.from('companies').select('name,gstin').eq('id', companyId).single();
+    if (company) document.getElementById('hdr-company').textContent = company.name;
+  } else {
+    document.getElementById('hdr-company').textContent = CURRENT_PROFILE.username;
+  }
+
+  // Load GST data — by company if assigned, else by user
+  const { data: rows } = companyId
+    ? await _supa.from('gst_data').select('data_key,data_value').eq('company_id', companyId)
+    : await _supa.from('gst_data').select('data_key,data_value').eq('user_id', uid);
+
+  if (rows) rows.forEach(r => { if (DB.hasOwnProperty(r.data_key)) DB[r.data_key] = r.data_value; });
+  refreshAll();
+
+  // Subscribe to realtime for this company
+  if (companyId) subscribeToCompanyRealtime(companyId);
+}
+
+async function saveUserDataToSupabase(key) {
+  const uid       = CURRENT_USER.id;
+  const companyId = CURRENT_PROFILE?.company_id || null;
+  const value     = DB[key];
+
+  console.log('💾 Saving key:', key, '| company:', companyId, '| user:', uid);
+
+  _lastSavedKey  = key;
+  _lastSavedTime = Date.now();
+
+  if (companyId) {
+    // First check if row exists for this company+key
+    const { data: existing } = await _supa
+      .from('gst_data')
+      .select('id')
+      .eq('company_id', companyId)
+      .eq('data_key', key)
+      .maybeSingle();
+
+    if (existing) {
+      // Update existing row
+      await _supa.from('gst_data')
+        .update({ data_value: value, user_id: uid, updated_at: new Date().toISOString() })
+        .eq('company_id', companyId)
+        .eq('data_key', key);
+    } else {
+      // Insert new row
+      await _supa.from('gst_data')
+        .insert({ company_id: companyId, user_id: uid, data_key: key, data_value: value, updated_at: new Date().toISOString() });
+    }
+  } else {
+    // No company — save by user only
+    const { data: existing } = await _supa
+      .from('gst_data')
+      .select('id')
+      .eq('user_id', uid)
+      .eq('data_key', key)
+      .is('company_id', null)
+      .maybeSingle();
+
+    if (existing) {
+      await _supa.from('gst_data')
+        .update({ data_value: value, updated_at: new Date().toISOString() })
+        .eq('user_id', uid)
+        .eq('data_key', key);
+    } else {
+      await _supa.from('gst_data')
+        .insert({ user_id: uid, data_key: key, data_value: value, updated_at: new Date().toISOString() });
+    }
+  }
+}
+
+// ── Override persist to save to Supabase when logged in ──
+const _originalPersist = window._originalPersist || null;
+
+function persist(key) {
+  if (key === 'recoDecisions') {
+    localStorage.setItem(KEYS.recoDecisions, JSON.stringify(DB.recoDecisions));
+  } else {
+    saveDataKey(key, DB[key]);
+  }
+  // Also save to Supabase if user is logged in
+  if (CURRENT_USER && ['sales','returns','purchase','rcm','data2b','recoDecisions'].includes(key)) {
+    saveUserDataToSupabase(key);
+  }
+}
+
+// ── Check for existing session on page load ──
+async function initAuth() {
+  const { data: { session } } = await _supa.auth.getSession();
+  if (session) {
+    // Load profile to check role
+    const { data: profile } = await _supa
+      .from('profiles')
+      .select('*')
+      .eq('id', session.user.id)
+      .single();
+
+    // NEVER auto-login admin — always show login screen for security
+    if (profile && profile.role === 'admin') {
+      await _supa.auth.signOut();
+      document.getElementById('login-screen').classList.add('visible');
+      return;
+    }
+
+    // For regular users — restore session automatically
+    if (profile && profile.is_active) {
+      CURRENT_USER    = session.user;
+      CURRENT_PROFILE = profile;
+      showAppForUser();
+      return;
+    }
+  }
+  // Show login screen
+  document.getElementById('login-screen').classList.add('visible');
+}
+
+// ===============================================================
+// CONSTANTS & HELPERS
+// ===============================================================
+const MONTHS = [
+  'Apr-26','May-26','Jun-26','Jul-26','Aug-26','Sep-26',
+  'Oct-26','Nov-26','Dec-26','Jan-27','Feb-27','Mar-27'
+];
+const MONTH_KEYS = MONTHS.map((m,i) => i);
+
+function fmt(n) {
+  if (!n || isNaN(n)) return '—';
+  const abs = Math.abs(parseFloat(n));
+  const s = abs.toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2});
+  return (n < 0 ? '-₹' : '₹') + s;
+}
+function fmtN(n) {
+  if (!n || isNaN(n)) return '0.00';
+  return parseFloat(n).toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+function num(v) { return parseFloat(v) || 0; }
+function uid() { return Date.now().toString(36) + Math.random().toString(36).substr(2,5); }
+
+// ===============================================================
+// DATA LAYER
+// ===============================================================
+const KEYS = {
+  sales: 'gst_sales_2627',
+  returns: 'gst_returns_2627',
+  purchase: 'gst_purchase_2627',
+  rcm: 'gst_rcm_2627',
+  data2b: 'gst_2b_2627',
+  settings: 'gst_settings_2627',
+  recoDecisions: 'gst_reco_decisions_2627'
+};
+
+function loadData(key) {
+  try { return JSON.parse(localStorage.getItem(KEYS[key]) || '[]'); } catch { return []; }
+}
+function saveDataKey(key, data) {
+  localStorage.setItem(KEYS[key], JSON.stringify(data));
+}
+function loadSettings() {
+  try {
+    return JSON.parse(localStorage.getItem(KEYS.settings) || 'null') || {
+      company: 'YOUR COMPANY NAME', gstin: '06XXXXX', fy: '2026-27',
+      stateCode: '06', gstRate: 18, rcmFixed: 9265.41, rcmIgstRate: 9
+    };
+  } catch { return { company:'YOUR COMPANY', gstin:'', fy:'2026-27', stateCode:'06', gstRate:18, rcmFixed:9265.41, rcmIgstRate:9 }; }
+}
+
+function loadRecoDecisions() {
+  try { return JSON.parse(localStorage.getItem(KEYS.recoDecisions) || '{}'); } catch { return {}; }
+}
+
+let DB = {
+  sales: loadData('sales'),
+  returns: loadData('returns'),
+  purchase: loadData('purchase'),
+  rcm: loadData('rcm'),
+  data2b: loadData('data2b'),
+  settings: loadSettings(),
+  recoDecisions: loadRecoDecisions()
+};
+let editState = { module: null, id: null };
+
+function persist(key) {
+  if (key === 'recoDecisions') {
+    localStorage.setItem(KEYS.recoDecisions, JSON.stringify(DB.recoDecisions));
+  } else {
+    saveDataKey(key, DB[key]);
+  }
+}
+
+// ===============================================================
+// TAX CALC
+// ===============================================================
+function getSettings() { return DB.settings; }
+function getRate() { return num(getSettings().gstRate) / 100; }
+function isIntraState(gstin) {
+  const g = (gstin || '').trim().toUpperCase();
+  if (!g || g.length < 2) return false;
+  return g.startsWith('06');
+}
+function isExport(gstin) { return !(gstin || '').trim(); }
+
+function computeTax(taxable, gstin) {
+  const rate = getRate();
+  const t = num(taxable);
+  if (isExport(gstin)) return { igst:0, cgst:0, sgst:0 };
+  if (isIntraState(gstin)) return { igst:0, cgst: t*rate/2, sgst: t*rate/2 };
+  return { igst: t*rate, cgst:0, sgst:0 };
+}
+
+// ===============================================================
+// MONTH DROPDOWNS
+// ===============================================================
+function populateMonthDropdown(id, addAll = false) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.innerHTML = '';
+  if (addAll) el.innerHTML = '<option value="">All Months</option>';
+  MONTHS.forEach((m,i) => {
+    const o = document.createElement('option');
+    o.value = m; o.textContent = m;
+    el.appendChild(o);
+  });
+}
+
+function populateAllDropdowns() {
+  ['s-month','r-month','p-month','rcm-month','b2-month'].forEach(id => populateMonthDropdown(id));
+  ['sales-month-filter','returns-month-filter','purchase-month-filter','rcm-month-filter','r2b-month-filter','reco-month-filter'].forEach(id => populateMonthDropdown(id, true));
+  const ps = document.getElementById('payment-month-select');
+  if (ps) { ps.innerHTML=''; MONTHS.forEach(m => { const o=document.createElement('option'); o.value=m; o.textContent=m; ps.appendChild(o); }); }
+}
+
+// ===============================================================
+// SALES MODULE
+// ===============================================================
+function calcSalesTax() {
+  const gstin = document.getElementById('s-gstin-party').value;
+  const taxable = document.getElementById('s-taxable').value;
+  const oop = num(document.getElementById('s-oop').value);
+  const tax = computeTax(taxable, gstin);
+  document.getElementById('s-igst').value = tax.igst ? tax.igst.toFixed(2) : '';
+  document.getElementById('s-cgst').value = tax.cgst ? tax.cgst.toFixed(2) : '';
+  document.getElementById('s-sgst').value = tax.sgst ? tax.sgst.toFixed(2) : '';
+  const total = num(taxable) + tax.igst + tax.cgst + tax.sgst + oop;
+  document.getElementById('s-total').value = total.toFixed(2);
+}
+
+function openModal(mod) {
+  editState = { module: mod, id: null };
+  if (mod === 'sales') {
+    document.getElementById('sales-modal-title').textContent = 'Add Sales Invoice';
+    clearSalesForm();
+    document.getElementById('modal-sales').classList.add('open');
+    document.getElementById('s-month').value = MONTHS[0];
+  } else if (mod === 'returns') {
+    clearReturnsForm();
+    document.getElementById('modal-returns').classList.add('open');
+  } else if (mod === 'purchase') {
+    document.getElementById('purchase-modal-title').textContent = 'Add Purchase Invoice';
+    clearPurchaseForm();
+    document.getElementById('modal-purchase').classList.add('open');
+  } else if (mod === 'rcm') {
+    clearRcmForm();
+    document.getElementById('modal-rcm').classList.add('open');
+  } else if (mod === '2b') {
+    clear2BForm();
+    document.getElementById('modal-2b').classList.add('open');
+  }
+}
+
+function closeModal(mod) {
+  document.getElementById('modal-' + mod).classList.remove('open');
+  editState = { module: null, id: null };
+}
+
+function clearSalesForm() {
+  ['s-party','s-gstin-party','s-inv-no','s-taxable','s-igst','s-cgst','s-sgst','s-oop','s-total','s-remarks'].forEach(id => {
+    const el = document.getElementById(id); if(el) el.value = '';
+  });
+  document.getElementById('s-status').value = 'Active';
+  document.getElementById('s-oop').value = '0';
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('s-date').value = today;
+}
+
+function saveSales() {
+  const month = document.getElementById('s-month').value;
+  const party = document.getElementById('s-party').value.trim();
+  const taxable = document.getElementById('s-taxable').value;
+  if (!month || !party || !taxable) { showToast('Please fill required fields', 'error'); return; }
+  const row = {
+    id: editState.id || uid(),
+    month, date: document.getElementById('s-date').value,
+    party, gstin: document.getElementById('s-gstin-party').value.toUpperCase(),
+    invNo: document.getElementById('s-inv-no').value,
+    taxable: num(taxable),
+    igst: num(document.getElementById('s-igst').value),
+    cgst: num(document.getElementById('s-cgst').value),
+    sgst: num(document.getElementById('s-sgst').value),
+    oop: num(document.getElementById('s-oop').value),
+    total: num(document.getElementById('s-total').value),
+    status: document.getElementById('s-status').value,
+    remarks: document.getElementById('s-remarks').value
+  };
+  if (editState.id) {
+    const idx = DB.sales.findIndex(r => r.id === editState.id);
+    if (idx >= 0) DB.sales[idx] = row;
+  } else {
+    DB.sales.push(row);
+  }
+  persist('sales');
+  closeModal('sales');
+  renderSalesTable();
+  renderSalesCards();
+  showToast('Invoice saved!', 'success');
+}
+
+function editSales(id) {
+  const row = DB.sales.find(r => r.id === id);
+  if (!row) return;
+  editState = { module: 'sales', id };
+  document.getElementById('sales-modal-title').textContent = 'Edit Sales Invoice';
+  document.getElementById('s-month').value = row.month;
+  document.getElementById('s-date').value = row.date;
+  document.getElementById('s-party').value = row.party;
+  document.getElementById('s-gstin-party').value = row.gstin;
+  document.getElementById('s-inv-no').value = row.invNo;
+  document.getElementById('s-taxable').value = row.taxable;
+  document.getElementById('s-igst').value = row.igst;
+  document.getElementById('s-cgst').value = row.cgst;
+  document.getElementById('s-sgst').value = row.sgst;
+  document.getElementById('s-oop').value = row.oop;
+  document.getElementById('s-total').value = row.total;
+  document.getElementById('s-status').value = row.status;
+  document.getElementById('s-remarks').value = row.remarks || '';
+  document.getElementById('modal-sales').classList.add('open');
+}
+
+function deleteSales(id) {
+  if (!confirm('Delete this invoice?')) return;
+  DB.sales = DB.sales.filter(r => r.id !== id);
+  persist('sales');
+  renderSalesTable();
+  renderSalesCards();
+  showToast('Invoice deleted');
+}
+
+function renderSalesTable() {
+  const monthF = document.getElementById('sales-month-filter').value;
+  const search = (document.getElementById('sales-search').value || '').toLowerCase();
+  const statusF = document.getElementById('sales-status-filter').value;
+  let rows = DB.sales.filter(r => {
+    if (monthF && r.month !== monthF) return false;
+    if (statusF && r.status !== statusF) return false;
+    if (search && !r.party.toLowerCase().includes(search) && !r.invNo.toLowerCase().includes(search)) return false;
+    return true;
+  });
+  const tbody = document.getElementById('sales-tbody');
+  const tfoot = document.getElementById('sales-tfoot');
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="14"><div class="empty-state"><div class="empty-icon">📄</div><p>No invoices found. Click "Add Invoice" to begin.</p></div></td></tr>`;
+    tfoot.innerHTML = '';
+    return;
+  }
+  let totTaxable=0,totIgst=0,totCgst=0,totSgst=0,totOop=0,totTotal=0;
+  tbody.innerHTML = rows.map((r,i) => {
+    const active = r.status === 'Active';
+    if (active) { totTaxable+=r.taxable; totIgst+=r.igst; totCgst+=r.cgst; totSgst+=r.sgst; totOop+=r.oop; totTotal+=r.total; }
+    return `<tr class="${r.status==='Cancelled'?'cancelled':''}">
+      <td>${i+1}</td><td>${r.month}</td><td>${r.date||'—'}</td>
+      <td style="font-weight:500">${r.party}</td>
+      <td class="gstin-col">${r.gstin||'—'}</td>
+      <td class="inv-no">${r.invNo||'—'}</td>
+      <td class="amount">${fmtN(r.taxable)}</td>
+      <td class="amount">${r.igst?fmtN(r.igst):'—'}</td>
+      <td class="amount">${r.cgst?fmtN(r.cgst):'—'}</td>
+      <td class="amount">${r.sgst?fmtN(r.sgst):'—'}</td>
+      <td class="amount">${r.oop?fmtN(r.oop):'—'}</td>
+      <td class="amount" style="font-weight:600">${fmtN(r.total)}</td>
+      <td><span class="badge ${r.status==='Active'?'badge-green':'badge-red'}">${r.status}</span></td>
+      <td>
+        <button class="btn btn-outline btn-sm" onclick="editSales('${r.id}')">✏</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteSales('${r.id}')">🗑</button>
+      </td>
+    </tr>`;
+  }).join('');
+  tfoot.innerHTML = `<tr class="total-row">
+    <td colspan="6">TOTAL (Active)</td>
+    <td class="amount">${fmtN(totTaxable)}</td>
+    <td class="amount">${totIgst?fmtN(totIgst):'—'}</td>
+    <td class="amount">${totCgst?fmtN(totCgst):'—'}</td>
+    <td class="amount">${totSgst?fmtN(totSgst):'—'}</td>
+    <td class="amount">${totOop?fmtN(totOop):'—'}</td>
+    <td class="amount">${fmtN(totTotal)}</td>
+    <td colspan="2"></td>
+  </tr>`;
+}
+
+function renderSalesCards() {
+  const active = DB.sales.filter(r => r.status === 'Active');
+  const totTaxable = active.reduce((a,r) => a+r.taxable, 0);
+  const totIgst = active.reduce((a,r) => a+r.igst, 0);
+  const totCgst = active.reduce((a,r) => a+r.cgst, 0);
+  const totSgst = active.reduce((a,r) => a+r.sgst, 0);
+  const totTax = totIgst + totCgst + totSgst;
+  document.getElementById('sales-cards').innerHTML = `
+    <div class="card blue"><div class="card-label">Total Invoices</div><div class="card-value">${active.length}</div><div class="card-sub">Active only</div></div>
+    <div class="card green"><div class="card-label">Net Taxable</div><div class="card-value">${fmt(totTaxable)}</div><div class="card-sub">All months</div></div>
+    <div class="card amber"><div class="card-label">IGST Output</div><div class="card-value">${fmt(totIgst)}</div></div>
+    <div class="card teal"><div class="card-label">CGST+SGST Output</div><div class="card-value">${fmt(totCgst+totSgst)}</div></div>
+    <div class="card red"><div class="card-label">Total Tax</div><div class="card-value">${fmt(totTax)}</div></div>
+  `;
+}
+
+// ===============================================================
+// RETURNS MODULE
+// ===============================================================
+function calcReturnTax() {
+  const gstin = document.getElementById('r-gstin-party').value;
+  const taxable = document.getElementById('r-taxable').value;
+  const tax = computeTax(taxable, gstin);
+  document.getElementById('r-igst').value = tax.igst ? tax.igst.toFixed(2) : '';
+  document.getElementById('r-cgst').value = tax.cgst ? tax.cgst.toFixed(2) : '';
+  document.getElementById('r-sgst').value = tax.sgst ? tax.sgst.toFixed(2) : '';
+  const total = num(taxable) + tax.igst + tax.cgst + tax.sgst;
+  document.getElementById('r-total').value = total.toFixed(2);
+}
+
+function clearReturnsForm() {
+  ['r-party','r-gstin-party','r-cn-no','r-orig-inv','r-reason','r-taxable','r-igst','r-cgst','r-sgst','r-total'].forEach(id => {
+    const el = document.getElementById(id); if(el) el.value='';
+  });
+  document.getElementById('r-date').value = new Date().toISOString().split('T')[0];
+}
+
+function saveReturn() {
+  const month = document.getElementById('r-month').value;
+  const party = document.getElementById('r-party').value.trim();
+  const taxable = document.getElementById('r-taxable').value;
+  if (!month || !party || !taxable) { showToast('Please fill required fields','error'); return; }
+  const row = {
+    id: editState.id || uid(),
+    month, date: document.getElementById('r-date').value,
+    party, gstin: document.getElementById('r-gstin-party').value.toUpperCase(),
+    cnNo: document.getElementById('r-cn-no').value,
+    origInv: document.getElementById('r-orig-inv').value,
+    reason: document.getElementById('r-reason').value,
+    taxable: num(taxable),
+    igst: num(document.getElementById('r-igst').value),
+    cgst: num(document.getElementById('r-cgst').value),
+    sgst: num(document.getElementById('r-sgst').value),
+    total: num(document.getElementById('r-total').value)
+  };
+  if (editState.id) {
+    const idx = DB.returns.findIndex(r => r.id === editState.id);
+    if (idx >= 0) DB.returns[idx] = row;
+  } else DB.returns.push(row);
+  persist('returns');
+  closeModal('returns');
+  renderReturnsTable();
+  showToast('Credit note saved!','success');
+}
+
+function editReturn(id) {
+  const row = DB.returns.find(r => r.id === id);
+  if (!row) return;
+  editState = { module:'returns', id };
+  ['r-month','r-date','r-party','r-gstin-party','r-cn-no','r-orig-inv','r-reason','r-taxable','r-igst','r-cgst','r-sgst','r-total'].forEach(fid => {
+    const map = {
+      'r-month':'month','r-date':'date','r-party':'party','r-gstin-party':'gstin',
+      'r-cn-no':'cnNo','r-orig-inv':'origInv','r-reason':'reason',
+      'r-taxable':'taxable','r-igst':'igst','r-cgst':'cgst','r-sgst':'sgst','r-total':'total'
+    };
+    const el = document.getElementById(fid); if(el) el.value = row[map[fid]]||'';
+  });
+  document.getElementById('modal-returns').classList.add('open');
+}
+
+function deleteReturn(id) {
+  if (!confirm('Delete this credit note?')) return;
+  DB.returns = DB.returns.filter(r => r.id !== id);
+  persist('returns');
+  renderReturnsTable();
+  showToast('Credit note deleted');
+}
+
+function renderReturnsTable() {
+  const monthF = document.getElementById('returns-month-filter').value;
+  const search = (document.getElementById('returns-search').value || '').toLowerCase();
+  let rows = DB.returns.filter(r => {
+    if (monthF && r.month !== monthF) return false;
+    if (search && !r.party.toLowerCase().includes(search) && !(r.cnNo||'').toLowerCase().includes(search)) return false;
+    return true;
+  });
+  const tbody = document.getElementById('returns-tbody');
+  const tfoot = document.getElementById('returns-tfoot');
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="14"><div class="empty-state"><div class="empty-icon">↩</div><p>No credit notes yet.</p></div></td></tr>`;
+    tfoot.innerHTML=''; return;
+  }
+  let totTaxable=0,totIgst=0,totCgst=0,totSgst=0,totTotal=0;
+  tbody.innerHTML = rows.map((r,i) => {
+    totTaxable+=r.taxable; totIgst+=r.igst; totCgst+=r.cgst; totSgst+=r.sgst; totTotal+=r.total;
+    return `<tr>
+      <td>${i+1}</td><td>${r.month}</td><td>${r.date||'—'}</td>
+      <td style="font-weight:500">${r.party}</td><td class="gstin-col">${r.gstin||'—'}</td>
+      <td class="inv-no">${r.cnNo||'—'}</td><td class="inv-no">${r.origInv||'—'}</td>
+      <td>${r.reason||'—'}</td>
+      <td class="amount">${fmtN(r.taxable)}</td>
+      <td class="amount">${r.igst?fmtN(r.igst):'—'}</td>
+      <td class="amount">${r.cgst?fmtN(r.cgst):'—'}</td>
+      <td class="amount">${r.sgst?fmtN(r.sgst):'—'}</td>
+      <td class="amount" style="font-weight:600">${fmtN(r.total)}</td>
+      <td>
+        <button class="btn btn-outline btn-sm" onclick="editReturn('${r.id}')">✏</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteReturn('${r.id}')">🗑</button>
+      </td>
+    </tr>`;
+  }).join('');
+  tfoot.innerHTML = `<tr class="total-row">
+    <td colspan="8">TOTAL</td>
+    <td class="amount">${fmtN(totTaxable)}</td>
+    <td class="amount">${totIgst?fmtN(totIgst):'—'}</td>
+    <td class="amount">${totCgst?fmtN(totCgst):'—'}</td>
+    <td class="amount">${totSgst?fmtN(totSgst):'—'}</td>
+    <td class="amount">${fmtN(totTotal)}</td>
+    <td></td>
+  </tr>`;
+}
+
+// ===============================================================
+// PURCHASE MODULE
+// ===============================================================
+function calcPurchaseTax() {
+  const gstin = document.getElementById('p-gstin').value;
+  const taxable = document.getElementById('p-taxable').value;
+  const tax = computeTax(taxable, gstin);
+  document.getElementById('p-igst').value = tax.igst ? tax.igst.toFixed(2) : '';
+  document.getElementById('p-cgst').value = tax.cgst ? tax.cgst.toFixed(2) : '';
+  document.getElementById('p-sgst').value = tax.sgst ? tax.sgst.toFixed(2) : '';
+  calcPurchaseTotal();
+}
+
+function calcPurchaseTotal() {
+  const taxable = num(document.getElementById('p-taxable').value);
+  const igst = num(document.getElementById('p-igst').value);
+  const cgst = num(document.getElementById('p-cgst').value);
+  const sgst = num(document.getElementById('p-sgst').value);
+  const total = taxable + igst + cgst + sgst;
+  document.getElementById('p-total').value = total.toFixed(2);
+  // Auto-set ITC amount
+  const itcEl = document.getElementById('p-itc');
+  const itcAmtEl = document.getElementById('p-itc-amt');
+  if (itcEl.value === 'Yes') itcAmtEl.value = (igst + cgst + sgst).toFixed(2);
+  else if (itcEl.value === 'No') itcAmtEl.value = '0';
+}
+
+function clearPurchaseForm() {
+  ['p-supplier','p-gstin','p-inv-no','p-taxable','p-igst','p-cgst','p-sgst','p-total','p-itc-amt','p-remarks'].forEach(id => {
+    const el = document.getElementById(id); if(el) el.value='';
+  });
+  document.getElementById('p-itc').value = 'Yes';
+  document.getElementById('p-date').value = new Date().toISOString().split('T')[0];
+}
+
+function savePurchase() {
+  const month = document.getElementById('p-month').value;
+  const supplier = document.getElementById('p-supplier').value.trim();
+  const taxable = document.getElementById('p-taxable').value;
+  if (!month || !supplier || !taxable) { showToast('Please fill required fields','error'); return; }
+  const row = {
+    id: editState.id || uid(),
+    month, date: document.getElementById('p-date').value,
+    supplier, gstin: document.getElementById('p-gstin').value.toUpperCase(),
+    invNo: document.getElementById('p-inv-no').value,
+    taxable: num(taxable),
+    igst: num(document.getElementById('p-igst').value),
+    cgst: num(document.getElementById('p-cgst').value),
+    sgst: num(document.getElementById('p-sgst').value),
+    total: num(document.getElementById('p-total').value),
+    itc: document.getElementById('p-itc').value,
+    itcAmt: num(document.getElementById('p-itc-amt').value),
+    remarks: document.getElementById('p-remarks').value
+  };
+  if (editState.id) {
+    const idx = DB.purchase.findIndex(r => r.id === editState.id);
+    if (idx >= 0) DB.purchase[idx] = row;
+  } else DB.purchase.push(row);
+  persist('purchase');
+  closeModal('purchase');
+  renderPurchaseTable();
+  renderPurchaseCards();
+  showToast('Purchase saved!','success');
+}
+
+function editPurchase(id) {
+  const row = DB.purchase.find(r => r.id === id);
+  if (!row) return;
+  editState = { module:'purchase', id };
+  document.getElementById('purchase-modal-title').textContent = 'Edit Purchase Invoice';
+  const map = {
+    'p-month':'month','p-date':'date','p-supplier':'supplier','p-gstin':'gstin',
+    'p-inv-no':'invNo','p-taxable':'taxable','p-igst':'igst','p-cgst':'cgst',
+    'p-sgst':'sgst','p-total':'total','p-itc':'itc','p-itc-amt':'itcAmt','p-remarks':'remarks'
+  };
+  Object.entries(map).forEach(([fid, field]) => {
+    const el = document.getElementById(fid); if(el) el.value = row[field]||'';
+  });
+  document.getElementById('modal-purchase').classList.add('open');
+}
+
+function deletePurchase(id) {
+  if (!confirm('Delete this purchase?')) return;
+  DB.purchase = DB.purchase.filter(r => r.id !== id);
+  persist('purchase');
+  renderPurchaseTable();
+  renderPurchaseCards();
+  showToast('Purchase deleted');
+}
+
+function renderPurchaseTable() {
+  const monthF = document.getElementById('purchase-month-filter').value;
+  const search = (document.getElementById('purchase-search').value || '').toLowerCase();
+  const itcF = document.getElementById('purchase-itc-filter').value;
+  let rows = DB.purchase.filter(r => {
+    if (monthF && r.month !== monthF) return false;
+    if (itcF && r.itc !== itcF) return false;
+    if (search && !r.supplier.toLowerCase().includes(search) && !(r.invNo||'').toLowerCase().includes(search)) return false;
+    return true;
+  });
+  const tbody = document.getElementById('purchase-tbody');
+  const tfoot = document.getElementById('purchase-tfoot');
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="14"><div class="empty-state"><div class="empty-icon">📥</div><p>No purchases yet.</p></div></td></tr>`;
+    tfoot.innerHTML=''; return;
+  }
+  let totTaxable=0,totIgst=0,totCgst=0,totSgst=0,totTotal=0,totItc=0;
+  tbody.innerHTML = rows.map((r,i) => {
+    totTaxable+=r.taxable; totIgst+=r.igst; totCgst+=r.cgst; totSgst+=r.sgst; totTotal+=r.total; totItc+=r.itcAmt;
+    const itcBadge = r.itc==='Yes'?'badge-green':r.itc==='No'?'badge-red':'badge-amber';
+    return `<tr>
+      <td>${i+1}</td><td>${r.month}</td><td>${r.date||'—'}</td>
+      <td style="font-weight:500">${r.supplier}</td><td class="gstin-col">${r.gstin||'—'}</td>
+      <td class="inv-no">${r.invNo||'—'}</td>
+      <td class="amount">${fmtN(r.taxable)}</td>
+      <td class="amount">${r.igst?fmtN(r.igst):'—'}</td>
+      <td class="amount">${r.cgst?fmtN(r.cgst):'—'}</td>
+      <td class="amount">${r.sgst?fmtN(r.sgst):'—'}</td>
+      <td class="amount" style="font-weight:600">${fmtN(r.total)}</td>
+      <td><span class="badge ${itcBadge}">${r.itc}</span></td>
+      <td class="amount" style="color:var(--green);font-weight:600">${fmtN(r.itcAmt)}</td>
+      <td>
+        <button class="btn btn-outline btn-sm" onclick="editPurchase('${r.id}')">✏</button>
+        <button class="btn btn-danger btn-sm" onclick="deletePurchase('${r.id}')">🗑</button>
+      </td>
+    </tr>`;
+  }).join('');
+  tfoot.innerHTML = `<tr class="total-row">
+    <td colspan="6">TOTAL</td>
+    <td class="amount">${fmtN(totTaxable)}</td>
+    <td class="amount">${totIgst?fmtN(totIgst):'—'}</td>
+    <td class="amount">${totCgst?fmtN(totCgst):'—'}</td>
+    <td class="amount">${totSgst?fmtN(totSgst):'—'}</td>
+    <td class="amount">${fmtN(totTotal)}</td>
+    <td></td>
+    <td class="amount">${fmtN(totItc)}</td>
+    <td></td>
+  </tr>`;
+}
+
+function renderPurchaseCards() {
+  const eligible = DB.purchase.filter(r => r.itc !== 'No');
+  const totItc = eligible.reduce((a,r) => a+r.itcAmt, 0);
+  const totTaxable = DB.purchase.reduce((a,r) => a+r.taxable, 0);
+  document.getElementById('purchase-cards').innerHTML = `
+    <div class="card blue"><div class="card-label">Total Purchases</div><div class="card-value">${DB.purchase.length}</div></div>
+    <div class="card green"><div class="card-label">Total Taxable</div><div class="card-value">${fmt(totTaxable)}</div></div>
+    <div class="card teal"><div class="card-label">ITC Available</div><div class="card-value">${fmt(totItc)}</div><div class="card-sub">Eligible only</div></div>
+  `;
+}
+
+// ===============================================================
+// RCM MODULE
+// ===============================================================
+function calcRcmTax() {
+  const settings = getSettings();
+  const taxable = num(document.getElementById('rcm-taxable').value);
+  const igst = taxable * (num(settings.rcmIgstRate) / 100);
+  document.getElementById('rcm-igst').value = igst ? igst.toFixed(2) : '';
+  document.getElementById('rcm-cgst').value = settings.rcmFixed ? settings.rcmFixed.toFixed(2) : '';
+  document.getElementById('rcm-sgst').value = settings.rcmFixed ? settings.rcmFixed.toFixed(2) : '';
+  const total = igst + num(settings.rcmFixed)*2;
+  document.getElementById('rcm-total').value = total.toFixed(2);
+}
+
+function clearRcmForm() {
+  ['rcm-supplier','rcm-nature','rcm-taxable','rcm-igst','rcm-cgst','rcm-sgst','rcm-total'].forEach(id => {
+    const el = document.getElementById(id); if(el) el.value='';
+  });
+  document.getElementById('rcm-paid').value = 'Yes';
+  document.getElementById('rcm-date').value = new Date().toISOString().split('T')[0];
+  // Pre-fill fixed RCM amounts
+  const settings = getSettings();
+  document.getElementById('rcm-cgst').value = settings.rcmFixed;
+  document.getElementById('rcm-sgst').value = settings.rcmFixed;
+}
+
+function saveRcm() {
+  const month = document.getElementById('rcm-month').value;
+  if (!month) { showToast('Please select month','error'); return; }
+  const row = {
+    id: editState.id || uid(),
+    month, date: document.getElementById('rcm-date').value,
+    supplier: document.getElementById('rcm-supplier').value,
+    nature: document.getElementById('rcm-nature').value,
+    taxable: num(document.getElementById('rcm-taxable').value),
+    igst: num(document.getElementById('rcm-igst').value),
+    cgst: num(document.getElementById('rcm-cgst').value),
+    sgst: num(document.getElementById('rcm-sgst').value),
+    total: num(document.getElementById('rcm-total').value),
+    paid: document.getElementById('rcm-paid').value
+  };
+  if (!row.total) row.total = row.igst + row.cgst + row.sgst;
+  if (editState.id) {
+    const idx = DB.rcm.findIndex(r => r.id === editState.id);
+    if (idx >= 0) DB.rcm[idx] = row;
+  } else DB.rcm.push(row);
+  persist('rcm');
+  closeModal('rcm');
+  renderRcmTable();
+  showToast('RCM entry saved!','success');
+}
+
+function editRcm(id) {
+  const row = DB.rcm.find(r => r.id === id);
+  if (!row) return;
+  editState = { module:'rcm', id };
+  const map = {
+    'rcm-month':'month','rcm-date':'date','rcm-supplier':'supplier','rcm-nature':'nature',
+    'rcm-taxable':'taxable','rcm-igst':'igst','rcm-cgst':'cgst','rcm-sgst':'sgst','rcm-total':'total','rcm-paid':'paid'
+  };
+  Object.entries(map).forEach(([fid, field]) => {
+    const el = document.getElementById(fid); if(el) el.value = row[field]||'';
+  });
+  document.getElementById('modal-rcm').classList.add('open');
+}
+
+function deleteRcm(id) {
+  if (!confirm('Delete this RCM entry?')) return;
+  DB.rcm = DB.rcm.filter(r => r.id !== id);
+  persist('rcm');
+  renderRcmTable();
+  showToast('RCM entry deleted');
+}
+
+function renderRcmTable() {
+  const monthF = document.getElementById('rcm-month-filter').value;
+  let rows = DB.rcm.filter(r => !monthF || r.month === monthF);
+  const tbody = document.getElementById('rcm-tbody');
+  const tfoot = document.getElementById('rcm-tfoot');
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="12"><div class="empty-state"><div class="empty-icon">🔄</div><p>No RCM entries yet.</p></div></td></tr>`;
+    tfoot.innerHTML=''; return;
+  }
+  let totTaxable=0,totIgst=0,totCgst=0,totSgst=0,totTotal=0;
+  tbody.innerHTML = rows.map((r,i) => {
+    totTaxable+=r.taxable; totIgst+=r.igst; totCgst+=r.cgst; totSgst+=r.sgst; totTotal+=r.total;
+    return `<tr>
+      <td>${i+1}</td><td>${r.month}</td><td>${r.date||'—'}</td>
+      <td>${r.supplier||'—'}</td><td>${r.nature||'—'}</td>
+      <td class="amount">${fmtN(r.taxable)}</td>
+      <td class="amount">${r.igst?fmtN(r.igst):'—'}</td>
+      <td class="amount">${fmtN(r.cgst)}</td>
+      <td class="amount">${fmtN(r.sgst)}</td>
+      <td class="amount" style="font-weight:600">${fmtN(r.total)}</td>
+      <td><span class="badge ${r.paid==='Yes'?'badge-green':'badge-red'}">${r.paid}</span></td>
+      <td>
+        <button class="btn btn-outline btn-sm" onclick="editRcm('${r.id}')">✏</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteRcm('${r.id}')">🗑</button>
+      </td>
+    </tr>`;
+  }).join('');
+  tfoot.innerHTML = `<tr class="total-row">
+    <td colspan="5">TOTAL</td>
+    <td class="amount">${fmtN(totTaxable)}</td>
+    <td class="amount">${totIgst?fmtN(totIgst):'—'}</td>
+    <td class="amount">${fmtN(totCgst)}</td>
+    <td class="amount">${fmtN(totSgst)}</td>
+    <td class="amount">${fmtN(totTotal)}</td>
+    <td colspan="2"></td>
+  </tr>`;
+}
+
+// ===============================================================
+// 2B MODULE
+// ===============================================================
+function clear2BForm() {
+  ['b2-supplier','b2-gstin','b2-inv-no','b2-taxable','b2-igst','b2-cgst','b2-sgst'].forEach(id => {
+    const el = document.getElementById(id); if(el) el.value='';
+  });
+  document.getElementById('b2-date').value = new Date().toISOString().split('T')[0];
+}
+
+function save2B() {
+  const month = document.getElementById('b2-month').value;
+  if (!month) { showToast('Please select month','error'); return; }
+  const row = {
+    id: editState.id || uid(),
+    month, date: document.getElementById('b2-date').value,
+    supplier: document.getElementById('b2-supplier').value,
+    gstin: document.getElementById('b2-gstin').value.toUpperCase(),
+    invNo: document.getElementById('b2-inv-no').value,
+    taxable: num(document.getElementById('b2-taxable').value),
+    igst: num(document.getElementById('b2-igst').value),
+    cgst: num(document.getElementById('b2-cgst').value),
+    sgst: num(document.getElementById('b2-sgst').value)
+  };
+  if (editState.id) {
+    const idx = DB.data2b.findIndex(r => r.id === editState.id);
+    if (idx >= 0) DB.data2b[idx] = row;
+  } else DB.data2b.push(row);
+  persist('data2b');
+  closeModal('2b');
+  render2BTable();
+  showToast('2B entry saved!','success');
+}
+
+function delete2B(id) {
+  if (!confirm('Delete this 2B entry?')) return;
+  DB.data2b = DB.data2b.filter(r => r.id !== id);
+  persist('data2b');
+  render2BTable();
+}
+
+function render2BTable() {
+  const monthF = document.getElementById('r2b-month-filter').value;
+  let rows = DB.data2b.filter(r => !monthF || r.month === monthF);
+  const tbody = document.getElementById('r2b-tbody');
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="11"><div class="empty-state"><div class="empty-icon">⚖</div><p>No 2B data entered yet. Add entries or paste from portal.</p></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = rows.map((r,i) => `<tr>
+    <td>${i+1}</td><td>${r.month}</td><td>${r.supplier||'—'}</td>
+    <td class="gstin-col">${r.gstin||'—'}</td>
+    <td class="inv-no">${r.invNo||'—'}</td><td>${r.date||'—'}</td>
+    <td class="amount">${fmtN(r.taxable)}</td>
+    <td class="amount">${r.igst?fmtN(r.igst):'—'}</td>
+    <td class="amount">${r.cgst?fmtN(r.cgst):'—'}</td>
+    <td class="amount">${r.sgst?fmtN(r.sgst):'—'}</td>
+    <td><button class="btn btn-danger btn-sm" onclick="delete2B('${r.id}')">🗑</button></td>
+  </tr>`).join('');
+}
+
+function switch2BTab(tab) {
+  ['upload','match','itc'].forEach(t => {
+    document.getElementById('r2b-panel-'+t).classList.toggle('active', t===tab);
+    document.getElementById('r2b-tab-'+t).classList.toggle('active', t===tab);
+  });
+  if (tab === 'match') run2BReco();
+  if (tab === 'itc') renderITCSummary();
+}
+
+function recoKey(gstin, invNo) {
+  return ((gstin||'').toString().trim().toUpperCase()) + '||' + ((invNo||'').toString().trim().toUpperCase());
+}
+
+function setRecoDecision(gstin, invNo, decision) {
+  const k = recoKey(gstin, invNo);
+  if (decision === 'none') {
+    delete DB.recoDecisions[k];
+  } else {
+    DB.recoDecisions[k] = decision; // 'claim' | 'skip'
+  }
+  persist('recoDecisions');
+  run2BReco();
+}
+
+function run2BReco() {
+  const tbody = document.getElementById('reco-tbody');
+  const monthF = document.getElementById('reco-month-filter') ? document.getElementById('reco-month-filter').value : '';
+
+  const ni = v => (v||'').toString().trim().toUpperCase();
+
+  // Build a merged map keyed by GSTIN+InvNo
+  const mergedMap = new Map();
+
+  // Step 1 — walk purchase (books) entries
+  DB.purchase.filter(r => r.itc !== 'No').forEach(b => {
+    const k = recoKey(b.gstin, b.invNo);
+    if (!mergedMap.has(k)) {
+      mergedMap.set(k, {
+        gstin: b.gstin, invNo: b.invNo, month: b.month,
+        supplier: b.supplier,
+        booksItc: 0, b2Itc: 0,
+        inBooks: false, in2B: false
+      });
+    }
+    const e = mergedMap.get(k);
+    e.inBooks = true;
+    e.booksItc += b.itcAmt;
+    if (!e.supplier) e.supplier = b.supplier;
+  });
+
+  // Step 2 — walk 2B entries
+  DB.data2b.forEach(d => {
+    const k = recoKey(d.gstin, d.invNo);
+    if (!mergedMap.has(k)) {
+      mergedMap.set(k, {
+        gstin: d.gstin, invNo: d.invNo, month: d.month,
+        supplier: d.supplier,
+        booksItc: 0, b2Itc: 0,
+        inBooks: false, in2B: false
+      });
+    }
+    const e = mergedMap.get(k);
+    e.in2B = true;
+    e.b2Itc += d.igst + d.cgst + d.sgst;
+    if (!e.supplier) e.supplier = d.supplier;
+    if (!e.month) e.month = d.month;
+  });
+
+  // Step 3 — classify and filter
+  let rows = [];
+  mergedMap.forEach((e, k) => {
+    let status;
+    if (e.inBooks && e.in2B)       status = 'matched';
+    else if (e.inBooks && !e.in2B) status = 'only-books';
+    else                           status = 'only-2b';
+    const decision = DB.recoDecisions[k] || 'none';
+    rows.push({ ...e, status, decision, key: k });
+  });
+
+  // Month filter
+  if (monthF) rows = rows.filter(r => r.month === monthF);
+
+  // Status filter
+  const statusF = document.getElementById('reco-status-filter') ? document.getElementById('reco-status-filter').value : '';
+  if (statusF) rows = rows.filter(r => r.status === statusF);
+
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="10"><div class="empty-state"><div class="empty-icon">⚖</div><p>No reconciliation data. Add purchase and 2B entries.</p></div></td></tr>`;
+    return;
+  }
+
+  // Sort: matched first, then only-books, then only-2b
+  const order = { matched: 0, 'only-books': 1, 'only-2b': 2 };
+  rows.sort((a, b) => order[a.status] - order[b.status] || (a.month||'').localeCompare(b.month||''));
+
+
+  tbody.innerHTML = rows.map(r => {
+    const diff = r.booksItc - r.b2Itc;
+    const diffColor = diff === 0 ? 'var(--green)' : diff > 0 ? 'var(--amber)' : 'var(--red)';
+
+    // Action cell
+    let actionCell = '—';
+    if (r.status === 'only-books') {
+      actionCell = '<span style="font-size:11px;color:var(--amber)">Follow up with supplier</span>';
+    } else if (r.status === 'only-2b') {
+      if (r.decision === 'claim') {
+        actionCell = `
+          <span class="badge badge-blue" style="margin-right:4px">✔ Claimed</span>
+          <button class="btn btn-outline btn-sm" onclick="setRecoDecision('${r.gstin}','${r.invNo}','none')">Undo</button>`;
+      } else if (r.decision === 'skip') {
+        actionCell = `
+          <span class="badge badge-gray" style="margin-right:4px">⊘ Skipped</span>
+          <button class="btn btn-outline btn-sm" onclick="setRecoDecision('${r.gstin}','${r.invNo}','none')">Undo</button>`;
+      } else {
+        actionCell = `
+          <button class="btn btn-primary btn-sm" style="margin-right:4px" onclick="setRecoDecision('${r.gstin}','${r.invNo}','claim')" title="In 2B but not booked — claim ITC directly from 2B">✔ Claim ITC</button>
+          <button class="btn btn-outline btn-sm" onclick="setRecoDecision('${r.gstin}','${r.invNo}','skip')" title="Skip — ignore this 2B entry">⊘ Skip</button>`;
+      }
+    }
+
+    const rowStyle = r.status === 'only-2b' ? (r.decision === 'claim' ? 'background:#eff6ff' : r.decision === 'skip' ? 'background:#f8fafc;opacity:0.7' : '') : '';
+
+    const statusBadge = {
+      matched:      `<span class="badge badge-green" style="font-size:10px;padding:3px 7px">✅ Matched</span>`,
+      'only-books': `<span class="badge badge-amber" style="font-size:10px;padding:3px 7px">⚠ Books only</span>`,
+      'only-2b':    `<span class="badge badge-red"   style="font-size:10px;padding:3px 7px">❌ 2B only</span>`
+    };
+
+    return `<tr class="${r.status}" style="${rowStyle}">
+      <td style="font-size:12px">${r.month||'—'}</td>
+      <td style="font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${(r.supplier||'').replace(/"/g,'')}">${r.supplier||'—'}</td>
+      <td style="font-size:10px;font-family:var(--font-mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.gstin||'—'}</td>
+      <td style="font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.invNo||'—'}</td>
+      <td class="amount" style="text-align:right">${r.booksItc ? fmtN(r.booksItc) : '—'}</td>
+      <td class="amount" style="text-align:right">${r.b2Itc ? fmtN(r.b2Itc) : '—'}</td>
+      <td class="amount" style="text-align:right;color:${diffColor};font-weight:600">${diff !== 0 ? fmtN(Math.abs(diff)) : '<span style="color:var(--green)">✓</span>'}</td>
+      <td style="text-align:center">${statusBadge[r.status]}</td>
+      <td>${actionCell}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderITCSummary() {
+  const el = document.getElementById('itc-summary-content');
+  const ni = v => (v||'').toString().trim().toUpperCase();
+
+  const matched = DB.purchase.filter(p =>
+    DB.data2b.some(d => ni(d.gstin) && ni(p.gstin) && ni(d.gstin) === ni(p.gstin) && ni(d.invNo) && ni(p.invNo) && ni(d.invNo) === ni(p.invNo))
+  );
+  const totalMatchedItc = matched.reduce((a,r) => a+r.itcAmt, 0);
+  const totalBooksItc   = DB.purchase.filter(r => r.itc !== 'No').reduce((a,r) => a+r.itcAmt, 0);
+  const total2bItc      = DB.data2b.reduce((a,r) => a+r.igst+r.cgst+r.sgst, 0);
+
+  // Claimed ITC — bills in books not in 2B, marked claim
+  const claimedBooksItc = DB.purchase.filter(p => {
+    const k = recoKey(p.gstin, p.invNo);
+    const in2B = DB.data2b.some(d => ni(d.gstin) === ni(p.gstin) && ni(d.invNo) === ni(p.invNo));
+    return !in2B && DB.recoDecisions[k] === 'claim';
+  }).reduce((a,r) => a+r.itcAmt, 0);
+
+  // Claimed ITC — in 2B not in books, marked claim
+  const claimed2bItc = DB.data2b.filter(d => {
+    const k = recoKey(d.gstin, d.invNo);
+    const inBooks = DB.purchase.some(p => ni(p.gstin) === ni(d.gstin) && ni(p.invNo) === ni(d.invNo));
+    return !inBooks && DB.recoDecisions[k] === 'claim';
+  }).reduce((a,r) => a+r.igst+r.cgst+r.sgst, 0);
+
+  const totalClaimedItc = claimedBooksItc + claimed2bItc;
+
+  el.innerHTML = `
+    <div class="cards-row">
+      <div class="card green"><div class="card-label">Matched ITC</div><div class="card-value">${fmt(totalMatchedItc)}</div><div class="card-sub">Both books &amp; 2B</div></div>
+      <div class="card blue"><div class="card-label">Books ITC (Total)</div><div class="card-value">${fmt(totalBooksItc)}</div></div>
+      <div class="card amber"><div class="card-label">GSTR-2B ITC</div><div class="card-value">${fmt(total2bItc)}</div></div>
+      <div class="card teal"><div class="card-label">Claimed (Bill Missing)</div><div class="card-value">${fmt(totalClaimedItc)}</div><div class="card-sub">Marked by you</div></div>
+      <div class="card ${(totalBooksItc-totalMatchedItc-totalClaimedItc)>0?'red':'green'}">
+        <div class="card-label">Pending / Unresolved</div>
+        <div class="card-value">${fmt(totalBooksItc-totalMatchedItc-totalClaimedItc)}</div>
+        <div class="card-sub">Follow up with supplier</div>
+      </div>
+    </div>
+    <div class="table-wrap" style="margin-top:12px">
+      <table style="width:100%;table-layout:fixed">
+        <thead>
+          <tr>
+            <th style="width:90px;text-align:left">Month</th>
+            <th style="width:130px;text-align:right">Books ITC</th>
+            <th style="width:130px;text-align:right">2B ITC</th>
+            <th style="width:130px;text-align:right">Matched</th>
+            <th style="width:140px;text-align:right">Claimed (No 2B)</th>
+            <th style="width:130px;text-align:right">Unresolved</th>
+            <th style="width:140px;text-align:right">Final Claimable</th>
+          </tr>
+        </thead>
+        <tbody>
+        ${MONTHS.map(m => {
+          const bItc     = DB.purchase.filter(r => r.month===m && r.itc!=='No').reduce((a,r)=>a+r.itcAmt,0);
+          const b2Itc    = DB.data2b.filter(r => r.month===m).reduce((a,r)=>a+r.igst+r.cgst+r.sgst,0);
+          const matchItc = DB.purchase.filter(p => p.month===m && DB.data2b.some(d => ni(d.gstin)===ni(p.gstin) && ni(d.invNo)===ni(p.invNo))).reduce((a,r)=>a+r.itcAmt,0);
+          const claimItc = (() => {
+            // books-side claims (in books, not in 2B, marked claim)
+            const bk = DB.purchase.filter(p => {
+              if (p.month !== m) return false;
+              const k = recoKey(p.gstin, p.invNo);
+              const in2B = DB.data2b.some(d => ni(d.gstin)===ni(p.gstin) && ni(d.invNo)===ni(p.invNo));
+              return !in2B && DB.recoDecisions[k] === 'claim';
+            }).reduce((a,r)=>a+r.itcAmt,0);
+            // 2b-side claims (in 2B, not in books, marked claim)
+            const b2 = DB.data2b.filter(d => {
+              if (d.month !== m) return false;
+              const k = recoKey(d.gstin, d.invNo);
+              const inBooks = DB.purchase.some(p => ni(p.gstin)===ni(d.gstin) && ni(p.invNo)===ni(d.invNo));
+              return !inBooks && DB.recoDecisions[k] === 'claim';
+            }).reduce((a,r)=>a+r.igst+r.cgst+r.sgst,0);
+            return bk + b2;
+          })();
+          const unresolved = bItc - matchItc - claimItc;
+          const claimable  = matchItc + claimItc;
+          if (!bItc && !b2Itc) return '';
+          return `<tr>
+            <td style="font-weight:600">${m}</td>
+            <td class="amount" style="text-align:right">${fmtN(bItc)}</td>
+            <td class="amount" style="text-align:right">${fmtN(b2Itc)}</td>
+            <td class="amount" style="text-align:right;color:var(--green)">${fmtN(matchItc)}</td>
+            <td class="amount" style="text-align:right;color:var(--blue)">${claimItc ? fmtN(claimItc) : '—'}</td>
+            <td class="amount" style="text-align:right;color:${unresolved>0?'var(--amber)':'var(--gray5)'}">${fmtN(unresolved)}</td>
+            <td class="amount" style="text-align:right;font-weight:700;color:var(--blue)">${fmtN(claimable)}</td>
+          </tr>`;
+        }).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+// ===============================================================
+// SUMMARY MODULE
+// ===============================================================
+function getMonthlySummary(month) {
+  const activeSales = DB.sales.filter(r => r.month === month && r.status === 'Active');
+  const returns = DB.returns.filter(r => r.month === month);
+  const purchases = DB.purchase.filter(r => r.month === month && r.itc !== 'No');
+  const rcm = DB.rcm.filter(r => r.month === month);
+
+  const salesIgst = activeSales.reduce((a,r) => a+r.igst, 0);
+  const salesCgst = activeSales.reduce((a,r) => a+r.cgst, 0);
+  const salesSgst = activeSales.reduce((a,r) => a+r.sgst, 0);
+
+  const retIgst = returns.reduce((a,r) => a+r.igst, 0);
+  const retCgst = returns.reduce((a,r) => a+r.cgst, 0);
+  const retSgst = returns.reduce((a,r) => a+r.sgst, 0);
+
+  const rcmIgst = rcm.reduce((a,r) => a+r.igst, 0);
+  const rcmCgst = rcm.reduce((a,r) => a+r.cgst, 0);
+  const rcmSgst = rcm.reduce((a,r) => a+r.sgst, 0);
+  const rcmPaidIgst = rcm.filter(r => r.paid==='Yes').reduce((a,r) => a+r.igst, 0);
+  const rcmPaidCgst = rcm.filter(r => r.paid==='Yes').reduce((a,r) => a+r.cgst, 0);
+  const rcmPaidSgst = rcm.filter(r => r.paid==='Yes').reduce((a,r) => a+r.sgst, 0);
+
+  // ITC from purchases (split by tax type based on GSTIN)
+  let itcIgst=0, itcCgst=0, itcSgst=0;
+  purchases.forEach(r => { itcIgst+=r.igst; itcCgst+=r.cgst; itcSgst+=r.sgst; });
+  // Use itcAmt proportionally if partial
+  // For simplicity, use actual values
+
+  const outIgst = salesIgst - retIgst + rcmIgst;
+  const outCgst = salesCgst - retCgst + rcmCgst;
+  const outSgst = salesSgst - retSgst + rcmSgst;
+
+  const salesTaxable = activeSales.reduce((a,r) => a+r.taxable, 0);
+  const retTaxable = returns.reduce((a,r) => a+r.taxable, 0);
+  const purchTaxable = DB.purchase.filter(r => r.month===month).reduce((a,r) => a+r.taxable, 0);
+
+  return {
+    salesIgst, salesCgst, salesSgst,
+    retIgst, retCgst, retSgst,
+    outIgst, outCgst, outSgst,
+    rcmIgst, rcmCgst, rcmSgst,
+    rcmPaidIgst, rcmPaidCgst, rcmPaidSgst,
+    itcIgst, itcCgst, itcSgst,
+    salesTaxable, retTaxable, purchTaxable,
+    netSalesTaxable: salesTaxable - retTaxable
+  };
+}
+
+function renderSummary() {
+  const el = document.getElementById('summary-content');
+  // Compute cascading credit
+  let cfIgst=0, cfCgst=0, cfSgst=0;
+  const monthData = [];
+
+  MONTHS.forEach(m => {
+    const s = getMonthlySummary(m);
+    const netIgst = s.outIgst - s.itcIgst - s.rcmPaidIgst - cfIgst;
+    const netCgst = s.outCgst - s.itcCgst - s.rcmPaidCgst - cfCgst;
+    const netSgst = s.outSgst - s.itcSgst - s.rcmPaidSgst - cfSgst;
+    const payIgst = Math.max(0, netIgst);
+    const payCgst = Math.max(0, netCgst);
+    const paySgst = Math.max(0, netSgst);
+    cfIgst = netIgst < 0 ? Math.abs(netIgst) : 0;
+    cfCgst = netCgst < 0 ? Math.abs(netCgst) : 0;
+    cfSgst = netSgst < 0 ? Math.abs(netSgst) : 0;
+    monthData.push({ month:m, s, payIgst, payCgst, paySgst, cfIgst, cfCgst, cfSgst, netIgst, netCgst, netSgst });
+  });
+
+  const totals = monthData.reduce((acc, d) => {
+    acc.outIgst += d.s.outIgst; acc.outCgst += d.s.outCgst; acc.outSgst += d.s.outSgst;
+    acc.rcmIgst += d.s.rcmIgst; acc.rcmCgst += d.s.rcmCgst; acc.rcmSgst += d.s.rcmSgst;
+    acc.itcIgst += d.s.itcIgst; acc.itcCgst += d.s.itcCgst; acc.itcSgst += d.s.itcSgst;
+    acc.rcmPaidIgst += d.s.rcmPaidIgst; acc.rcmPaidCgst += d.s.rcmPaidCgst; acc.rcmPaidSgst += d.s.rcmPaidSgst;
+    acc.payIgst += d.payIgst; acc.payCgst += d.payCgst; acc.paySgst += d.paySgst;
+    acc.netSales += d.s.netSalesTaxable; acc.purchTaxable += d.s.purchTaxable;
+    return acc;
+  }, { outIgst:0,outCgst:0,outSgst:0,rcmIgst:0,rcmCgst:0,rcmSgst:0,itcIgst:0,itcCgst:0,itcSgst:0,rcmPaidIgst:0,rcmPaidCgst:0,rcmPaidSgst:0,payIgst:0,payCgst:0,paySgst:0,netSales:0,purchTaxable:0 });
+
+  const makeRow = (label, vals, cls='') => {
+    const [igst,cgst,sgst] = vals;
+    const tot = igst+cgst+sgst;
+    return `<tr class="${cls}">
+      <td style="font-weight:500">${label}</td>
+      <td class="amount">${fmtN(igst)}</td>
+      <td class="amount">${fmtN(cgst)}</td>
+      <td class="amount">${fmtN(sgst)}</td>
+      <td class="amount" style="font-weight:700">${fmtN(tot)}</td>
+    </tr>`;
+  };
+
+  el.innerHTML = `
+    <div style="overflow-x:auto;margin-bottom:20px">
+    <div class="summary-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Particulars</th>
+            ${MONTHS.map(m=>`<th style="text-align:center;min-width:110px">${m}</th>`).join('')}
+            <th style="background:#0a1628;min-width:110px;text-align:center">ANNUAL</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="highlight">
+            <td colspan="${MONTHS.length+2}" style="font-size:11px;font-weight:700;color:var(--blue);padding:6px 10px">OUTPUT TAX LIABILITY</td>
+          </tr>
+          <tr>
+            <td>Output (Sales) IGST</td>
+            ${monthData.map(d=>`<td class="amount">${d.s.salesIgst?fmtN(d.s.salesIgst):'—'}</td>`).join('')}
+            <td class="amount" style="font-weight:700">${fmtN(totals.outIgst-totals.rcmIgst)}</td>
+          </tr>
+          <tr>
+            <td>Output CGST+SGST</td>
+            ${monthData.map(d=>`<td class="amount">${(d.s.salesCgst+d.s.salesSgst)?fmtN(d.s.salesCgst+d.s.salesSgst):'—'}</td>`).join('')}
+            <td class="amount" style="font-weight:700">${fmtN((totals.outCgst+totals.outSgst)-(totals.rcmCgst+totals.rcmSgst))}</td>
+          </tr>
+          <tr>
+            <td>RCM Output</td>
+            ${monthData.map(d=>`<td class="amount">${(d.s.rcmIgst+d.s.rcmCgst+d.s.rcmSgst)?fmtN(d.s.rcmIgst+d.s.rcmCgst+d.s.rcmSgst):'—'}</td>`).join('')}
+            <td class="amount" style="font-weight:700">${fmtN(totals.rcmIgst+totals.rcmCgst+totals.rcmSgst)}</td>
+          </tr>
+          <tr class="highlight">
+            <td colspan="${MONTHS.length+2}" style="font-size:11px;font-weight:700;color:var(--teal);padding:6px 10px">INPUT TAX CREDIT</td>
+          </tr>
+          <tr>
+            <td>ITC (Purchase)</td>
+            ${monthData.map(d=>`<td class="amount" style="color:var(--green)">${(d.s.itcIgst+d.s.itcCgst+d.s.itcSgst)?fmtN(d.s.itcIgst+d.s.itcCgst+d.s.itcSgst):'—'}</td>`).join('')}
+            <td class="amount" style="color:var(--green);font-weight:700">${fmtN(totals.itcIgst+totals.itcCgst+totals.itcSgst)}</td>
+          </tr>
+          <tr>
+            <td>RCM ITC (Paid)</td>
+            ${monthData.map(d=>`<td class="amount" style="color:var(--green)">${(d.s.rcmPaidIgst+d.s.rcmPaidCgst+d.s.rcmPaidSgst)?fmtN(d.s.rcmPaidIgst+d.s.rcmPaidCgst+d.s.rcmPaidSgst):'—'}</td>`).join('')}
+            <td class="amount" style="color:var(--green);font-weight:700">${fmtN(totals.rcmPaidIgst+totals.rcmPaidCgst+totals.rcmPaidSgst)}</td>
+          </tr>
+          <tr class="net-pay">
+            <td>NET PAYABLE (Cash)</td>
+            ${monthData.map(d=>`<td class="amount">${fmtN(d.payIgst+d.payCgst+d.paySgst)}</td>`).join('')}
+            <td class="amount">${fmtN(totals.payIgst+totals.payCgst+totals.paySgst)}</td>
+          </tr>
+          <tr class="credit">
+            <td>Unutilised Credit c/f</td>
+            ${monthData.map(d=>`<td class="amount">${(d.cfIgst+d.cfCgst+d.cfSgst)?fmtN(d.cfIgst+d.cfCgst+d.cfSgst):'—'}</td>`).join('')}
+            <td class="amount">—</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px">
+      <div class="summary-table">
+        <table>
+          <thead><tr><th>Month</th><th>Net Sales (Taxable)</th><th>Net Purchase</th><th>Net Tax Payable</th></tr></thead>
+          <tbody>
+            ${monthData.map(d => `<tr>
+              <td>${d.month}</td>
+              <td class="amount">${fmtN(d.s.netSalesTaxable)}</td>
+              <td class="amount">${fmtN(d.s.purchTaxable)}</td>
+              <td class="amount" style="font-weight:700;color:var(--navy)">${fmtN(d.payIgst+d.payCgst+d.paySgst)}</td>
+            </tr>`).join('')}
+            <tr class="total-row">
+              <td>ANNUAL</td>
+              <td class="amount">${fmtN(totals.netSales)}</td>
+              <td class="amount">${fmtN(totals.purchTaxable)}</td>
+              <td class="amount">${fmtN(totals.payIgst+totals.payCgst+totals.paySgst)}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="summary-table">
+        <table>
+          <thead><tr><th>Month</th><th>IGST Payable</th><th>CGST Payable</th><th>SGST Payable</th><th>Total</th></tr></thead>
+          <tbody>
+            ${monthData.filter(d => d.payIgst+d.payCgst+d.paySgst > 0).map(d => `<tr>
+              <td>${d.month}</td>
+              <td class="amount">${fmtN(d.payIgst)}</td>
+              <td class="amount">${fmtN(d.payCgst)}</td>
+              <td class="amount">${fmtN(d.paySgst)}</td>
+              <td class="amount" style="font-weight:700">${fmtN(d.payIgst+d.payCgst+d.paySgst)}</td>
+            </tr>`).join('') || '<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--gray4)">No tax payable yet</td></tr>'}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+// ===============================================================
+// PAYMENT MODULE
+// ===============================================================
+function renderPayment() {
+  const month = document.getElementById('payment-month-select').value;
+  if (!month) return;
+  const el = document.getElementById('payment-content');
+  const s = getMonthlySummary(month);
+
+  // Compute cascading
+  let cfIgst=0, cfCgst=0, cfSgst=0;
+  for (const m of MONTHS) {
+    if (m === month) break;
+    const ms = getMonthlySummary(m);
+    const ni = ms.outIgst - ms.itcIgst - ms.rcmPaidIgst - cfIgst;
+    const nc = ms.outCgst - ms.itcCgst - ms.rcmPaidCgst - cfCgst;
+    const ns = ms.outSgst - ms.itcSgst - ms.rcmPaidSgst - cfSgst;
+    cfIgst = ni < 0 ? Math.abs(ni) : 0;
+    cfCgst = nc < 0 ? Math.abs(nc) : 0;
+    cfSgst = ns < 0 ? Math.abs(ns) : 0;
+  }
+
+  const netIgst = s.outIgst - s.itcIgst - s.rcmPaidIgst - cfIgst;
+  const netCgst = s.outCgst - s.itcCgst - s.rcmPaidCgst - cfCgst;
+  const netSgst = s.outSgst - s.itcSgst - s.rcmPaidSgst - cfSgst;
+  const payIgst = Math.max(0, netIgst);
+  const payCgst = Math.max(0, netCgst);
+  const paySgst = Math.max(0, netSgst);
+  const totalPay = payIgst + payCgst + paySgst;
+
+  const settings = getSettings();
+  el.innerHTML = `
+    <div class="payment-card" id="print-area">
+      <h2>${settings.company}</h2>
+      <div class="period">GST Payment Summary — ${month} (FY 2026-27)</div>
+      <div style="font-family:var(--font-mono);font-size:11px;color:var(--gray5);margin-bottom:20px">GSTIN: ${settings.gstin}</div>
+
+      <div class="pay-section-title">OUTPUT TAX LIABILITY</div>
+      <div class="pay-row"><span>Sales (IGST)</span><span class="pay-amount">${fmt(s.salesIgst)}</span></div>
+      <div class="pay-row"><span>Sales (CGST)</span><span class="pay-amount">${fmt(s.salesCgst)}</span></div>
+      <div class="pay-row"><span>Sales (SGST)</span><span class="pay-amount">${fmt(s.salesSgst)}</span></div>
+      <div class="pay-row"><span>Less: Credit Notes (IGST)</span><span class="pay-amount" style="color:var(--green)">- ${fmt(s.retIgst)}</span></div>
+      <div class="pay-row"><span>Less: Credit Notes (CGST+SGST)</span><span class="pay-amount" style="color:var(--green)">- ${fmt(s.retCgst+s.retSgst)}</span></div>
+
+      <div class="pay-section-title">RCM LIABILITY</div>
+      <div class="pay-row"><span>RCM IGST</span><span class="pay-amount">${fmt(s.rcmIgst)}</span></div>
+      <div class="pay-row"><span>RCM CGST</span><span class="pay-amount">${fmt(s.rcmCgst)}</span></div>
+      <div class="pay-row"><span>RCM SGST</span><span class="pay-amount">${fmt(s.rcmSgst)}</span></div>
+
+      <div class="pay-section-title">INPUT TAX CREDIT</div>
+      <div class="pay-row"><span>ITC — IGST</span><span class="pay-amount" style="color:var(--green)">- ${fmt(s.itcIgst)}</span></div>
+      <div class="pay-row"><span>ITC — CGST</span><span class="pay-amount" style="color:var(--green)">- ${fmt(s.itcCgst)}</span></div>
+      <div class="pay-row"><span>ITC — SGST</span><span class="pay-amount" style="color:var(--green)">- ${fmt(s.itcSgst)}</span></div>
+      <div class="pay-row"><span>RCM ITC (Paid)</span><span class="pay-amount" style="color:var(--green)">- ${fmt(s.rcmPaidIgst+s.rcmPaidCgst+s.rcmPaidSgst)}</span></div>
+      <div class="pay-row"><span>Credit b/f from prev. month</span><span class="pay-amount" style="color:var(--green)">- ${fmt(cfIgst+cfCgst+cfSgst)}</span></div>
+
+      <div class="pay-section-title">NET PAYABLE</div>
+      <div class="pay-row"><span>IGST Cash Payable</span><span class="pay-amount">${fmt(payIgst)}</span></div>
+      <div class="pay-row"><span>CGST Cash Payable</span><span class="pay-amount">${fmt(payCgst)}</span></div>
+      <div class="pay-row"><span>SGST Cash Payable</span><span class="pay-amount">${fmt(paySgst)}</span></div>
+      <div class="pay-row total cash"><span>TOTAL CASH GST PAYABLE</span><span class="pay-amount">${fmt(totalPay)}</span></div>
+
+      ${totalPay === 0 ? `<div style="margin-top:16px;padding:12px;background:var(--green-light);border-radius:var(--radius);color:var(--green);font-weight:600;font-size:13px;text-align:center">✅ No Cash Payment Required — ITC sufficient for ${month}</div>` : ''}
+
+      <div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--gray2);display:flex;justify-content:space-between;align-items:center">
+        <div style="font-size:10px;color:var(--gray4)">Generated by GST Reco Tool • FY 2026-27</div>
+        <button class="btn btn-primary no-print" onclick="window.print()">🖨 Print / PDF</button>
+      </div>
+    </div>
+  `;
+}
+
+// ===============================================================
+// SETTINGS
+// ===============================================================
+function loadSettingsForm() {
+  const s = DB.settings;
+  document.getElementById('s-company').value = s.company || '';
+  document.getElementById('s-gstin').value = s.gstin || '';
+  document.getElementById('s-fy').value = s.fy || '2026-27';
+  document.getElementById('s-state').value = s.stateCode || '06';
+  document.getElementById('s-gst-rate').value = s.gstRate || 18;
+  document.getElementById('s-rcm-fixed').value = s.rcmFixed || 9265.41;
+  document.getElementById('s-rcm-igst-rate').value = s.rcmIgstRate || 9;
+  // Only update header company name if not already set from Supabase company
+  const hdr = document.getElementById('hdr-company');
+  if (hdr && (hdr.textContent === 'Loading…' || hdr.textContent === 'YOUR COMPANY')) {
+    hdr.textContent = s.company || 'YOUR COMPANY';
+  }
+}
+
+function saveSettings() {
+  DB.settings = {
+    company: document.getElementById('s-company').value,
+    gstin: document.getElementById('s-gstin').value.toUpperCase(),
+    fy: document.getElementById('s-fy').value,
+    stateCode: document.getElementById('s-state').value,
+    gstRate: num(document.getElementById('s-gst-rate').value),
+    rcmFixed: num(document.getElementById('s-rcm-fixed').value),
+    rcmIgstRate: num(document.getElementById('s-rcm-igst-rate').value)
+  };
+  localStorage.setItem(KEYS.settings, JSON.stringify(DB.settings));
+  document.getElementById('hdr-company').textContent = DB.settings.company;
+  showToast('Settings saved!','success');
+}
+
+// ===============================================================
+// NAVIGATION
+// ===============================================================
+function switchTab(tab) {
+  ['sales','returns','purchase','rcm','reco2b','summary','payment','settings'].forEach(t => {
+    document.getElementById('mod-'+t)?.classList.remove('active');
+    document.getElementById('tab-'+t)?.classList.remove('active');
+  });
+  document.getElementById('mod-'+tab)?.classList.add('active');
+  document.getElementById('tab-'+tab)?.classList.add('active');
+  if (tab === 'summary') renderSummary();
+  if (tab === 'payment') renderPayment();
+  if (tab === 'settings') loadSettingsForm();
+}
+
+// ===============================================================
+// IMPORT / EXPORT
+// ===============================================================
+function exportData() {
+  const data = {
+    exportDate: new Date().toISOString(),
+    sales: DB.sales,
+    returns: DB.returns,
+    purchase: DB.purchase,
+    rcm: DB.rcm,
+    data2b: DB.data2b,
+    settings: DB.settings
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'gst-reco-fy2627-backup-' + new Date().toISOString().split('T')[0] + '.json';
+  a.click();
+  showToast('Data exported!','success');
+}
+
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (confirm('This will OVERWRITE all current data. Continue?')) {
+        DB.sales = data.sales || [];
+        DB.returns = data.returns || [];
+        DB.purchase = data.purchase || [];
+        DB.rcm = data.rcm || [];
+        DB.data2b = data.data2b || [];
+        DB.settings = data.settings || DB.settings;
+        Object.keys(KEYS).forEach(k => { if (DB[k]) persist(k); });
+        refreshAll();
+        showToast('Data imported successfully!','success');
+      }
+    } catch(err) {
+      showToast('Invalid JSON file','error');
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+function clearAllData() {
+  if (!confirm('⚠ This will permanently delete ALL data. Are you sure?')) return;
+  if (!confirm('Last chance — delete everything?')) return;
+
+  // Nuclear option — wipe every key we own, plus any legacy keys
+  try {
+    // Remove all known keys
+    Object.values(KEYS).forEach(k => { try { localStorage.removeItem(k); } catch(e){} });
+    // Also remove the cleared-flag and any stray keys with our prefix
+    localStorage.removeItem('gst_data_cleared_2627');
+    const toRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith('gst_')) toRemove.push(k);
+    }
+    toRemove.forEach(k => localStorage.removeItem(k));
+  } catch(e) {}
+
+  // Reset in-memory DB immediately
+  DB.sales = [];
+  DB.returns = [];
+  DB.purchase = [];
+  DB.rcm = [];
+  DB.data2b = [];
+  DB.recoDecisions = {};
+
+  // Mark cleared so sample data never reloads
+  try { localStorage.setItem('gst_data_cleared_2627', '1'); } catch(e) {}
+
+  // Re-render all tables to show empty state
+  refreshAll();
+  showToast('✅ All data cleared successfully', 'success');
+}
+
+function refreshAll() {
+  renderSalesTable();
+  renderSalesCards();
+  renderReturnsTable();
+  renderPurchaseTable();
+  renderPurchaseCards();
+  renderRcmTable();
+  render2BTable();
+  loadSettingsForm();
+}
+
+// ===============================================================
+// TOAST
+// ===============================================================
+function showToast(msg, type = '') {
+  const container = document.getElementById('toast');
+  const item = document.createElement('div');
+  item.className = 'toast-item' + (type ? ' '+type : '');
+  item.textContent = msg;
+  container.appendChild(item);
+  setTimeout(() => item.remove(), 3500);
+}
+
+// ===============================================================
+// PRELOAD SAMPLE DATA — disabled, tool starts clean
+// ===============================================================
+function preloadSampleData() {
+  // Sample data removed — tool starts with empty state
+  // Use Import Workbook to load your data
+}
+
+// ===============================================================
+// EXCEL IMPORT SYSTEM
+// ===============================================================
+
+let currentImportModule = null;
+let importPreviewRows = [];
+
+// ---- Template definitions ----
+const IMPORT_SCHEMAS = {
+  sales: {
+    label: 'Sales Register',
+    columns: [
+      { key:'month',   label:'Month',          required:true,  note:'e.g. Apr-26' },
+      { key:'date',    label:'Date',            required:true,  note:'DD-MM-YYYY or YYYY-MM-DD' },
+      { key:'party',   label:'Party Name',      required:true,  note:'' },
+      { key:'gstin',   label:'GSTIN',           required:false, note:'15-char GSTIN or blank for export' },
+      { key:'invNo',   label:'Invoice No',      required:false, note:'e.g. GTPL/26-27/0001' },
+      { key:'taxable', label:'Taxable Amount',  required:true,  note:'Number only, no ₹' },
+      { key:'igst',    label:'IGST',            required:false, note:'Leave blank to auto-calculate' },
+      { key:'cgst',    label:'CGST',            required:false, note:'Leave blank to auto-calculate' },
+      { key:'sgst',    label:'SGST',            required:false, note:'Leave blank to auto-calculate' },
+      { key:'oop',     label:'OOP Expenses',    required:false, note:'Out of pocket, default 0' },
+      { key:'status',  label:'Status',          required:false, note:'Active or Cancelled, default Active' },
+      { key:'remarks', label:'Remarks',         required:false, note:'' },
+    ],
+    sampleRow: ['Apr-26','2026-04-01','CLIENT NAME PVT LTD','09AABCD0052F1Z6','GTPL/26-27/0001','100000','','','','0','Active',''],
+    parseRow(raw) {
+      // 'Particulars' maps to 'supplier' via alias — also accept it as party
+      const party = ((raw.party || raw.supplier || '')).toString().trim();
+      const gstin = (raw.gstin||'').toString().trim().toUpperCase();
+
+      // Tax cells may contain Excel formula strings like "=F2*18%" — treat as blank
+      const safeNum = v => {
+        if (!v && v !== 0) return 0;
+        if (typeof v === 'string' && v.startsWith('=')) return 0;
+        return parseFloat(v) || 0;
+      };
+      const taxable = safeNum(raw.taxable);
+
+      // Month column in this sheet is an Excel date (the actual invoice date repeated),
+      // while Date column holds the real date string — use Date col for date, Month col for month
+      let month = '';
+      let date  = '';
+      if (raw.month && raw.date) {
+        // If month cell is a Date object or serial and date cell looks like a string date — swap roles
+        const monthIsDate = (raw.month instanceof Date) ||
+                            (typeof raw.month === 'number' && raw.month > 40000) ||
+                            /^\d{1,2}[-\/][A-Za-z]{3}[-\/]\d{4}$/.test((raw.month||'').toString().trim());
+        if (monthIsDate) {
+          // Month col holds a date — derive month from it; Date col holds the actual date string
+          month = parseMonth(raw.month);
+          date  = parseExcelDate(raw.date);
+        } else {
+          month = parseMonth(raw.month);
+          date  = parseExcelDate(raw.date);
+        }
+      } else {
+        month = parseMonth(raw.month);
+        date  = parseExcelDate(raw.date);
+      }
+
+      const igst = safeNum(raw.igst);
+      const cgst = safeNum(raw.cgst);
+      const sgst = safeNum(raw.sgst);
+      const tax  = (igst || cgst || sgst) ? { igst, cgst, sgst } : computeTax(taxable, gstin);
+      const oop  = safeNum(raw.oop);
+      return {
+        id: uid(), month, date, party, gstin,
+        invNo: (raw.invNo||'').toString().trim(),
+        taxable, igst: tax.igst, cgst: tax.cgst, sgst: tax.sgst, oop,
+        total: taxable + tax.igst + tax.cgst + tax.sgst + oop,
+        status: (raw.status||'Active').toString().trim() || 'Active',
+        remarks: (raw.remarks||'').toString()
+      };
+    },
+    validate(row) {
+      const errs = [];
+      if (!row.month || !MONTHS.includes(row.month)) errs.push('Invalid Month (use e.g. Apr-26)');
+      if (!row.party) errs.push('Party Name required');
+      if (!row.taxable) errs.push('Taxable Amount required');
+      return errs;
+    },
+    dbKey: 'sales',
+    refreshFn() { renderSalesTable(); renderSalesCards(); }
+  },
+
+  returns: {
+    label: 'Credit Notes',
+    columns: [
+      { key:'month',   label:'Month',           required:true,  note:'e.g. Apr-26' },
+      { key:'date',    label:'Date',             required:true,  note:'DD-MM-YYYY' },
+      { key:'party',   label:'Party Name',       required:true,  note:'' },
+      { key:'gstin',   label:'GSTIN',            required:false, note:'' },
+      { key:'cnNo',    label:'CN Number',        required:false, note:'e.g. CN-00001' },
+      { key:'origInv', label:'Original Invoice', required:false, note:'' },
+      { key:'reason',  label:'Reason',           required:false, note:'' },
+      { key:'taxable', label:'Taxable Amount',   required:true,  note:'Positive number' },
+      { key:'igst',    label:'IGST',             required:false, note:'Auto if blank' },
+      { key:'cgst',    label:'CGST',             required:false, note:'Auto if blank' },
+      { key:'sgst',    label:'SGST',             required:false, note:'Auto if blank' },
+    ],
+    sampleRow: ['Apr-26','2026-04-15','CLIENT NAME PVT LTD','09AABCD0052F1Z6','CN-00001','GTPL/26-27/0001','Wrong billing','10000','','',''],
+    parseRow(raw) {
+      const taxable = num(raw.taxable);
+      const gstin = (raw.gstin||'').toString().trim().toUpperCase();
+      const tax = raw.igst||raw.cgst||raw.sgst ? { igst:num(raw.igst), cgst:num(raw.cgst), sgst:num(raw.sgst) } : computeTax(taxable, gstin);
+      return { id:uid(), month:parseMonth(raw.month), date:parseExcelDate(raw.date), party:(raw.party||'').toString().trim(), gstin, cnNo:(raw.cnNo||'').toString(), origInv:(raw.origInv||'').toString(), reason:(raw.reason||'').toString(), taxable, igst:tax.igst, cgst:tax.cgst, sgst:tax.sgst, total:taxable+tax.igst+tax.cgst+tax.sgst };
+    },
+    validate(row) {
+      const errs = [];
+      if (!row.month || !MONTHS.includes(row.month)) errs.push('Invalid Month');
+      if (!row.party) errs.push('Party Name required');
+      if (!row.taxable) errs.push('Taxable Amount required');
+      return errs;
+    },
+    dbKey: 'returns',
+    refreshFn() { renderReturnsTable(); }
+  },
+
+  purchase: {
+    label: 'Purchase Register (ITC)',
+    columns: [
+      { key:'month',    label:'Month',           required:true,  note:'e.g. Apr-26' },
+      { key:'date',     label:'Date',             required:true,  note:'DD-MM-YYYY' },
+      { key:'supplier', label:'Supplier Name',    required:true,  note:'' },
+      { key:'gstin',    label:'Supplier GSTIN',   required:false, note:'' },
+      { key:'invNo',    label:'Invoice No',       required:false, note:'' },
+      { key:'taxable',  label:'Taxable Amount',   required:true,  note:'' },
+      { key:'igst',     label:'IGST',             required:false, note:'Auto if blank' },
+      { key:'cgst',     label:'CGST',             required:false, note:'Auto if blank' },
+      { key:'sgst',     label:'SGST',             required:false, note:'Auto if blank' },
+      { key:'itc',      label:'ITC Eligible',     required:false, note:'Yes / No / Partial — default Yes' },
+      { key:'itcAmt',   label:'ITC Amount',       required:false, note:'Auto if blank (= IGST+CGST+SGST)' },
+      { key:'remarks',  label:'Remarks',          required:false, note:'' },
+    ],
+    sampleRow: ['Apr-26','2026-04-03','ABC SERVICES LLP','06XXXXX','INV/001','50000','','9000','9000','Yes','',''],
+    parseRow(raw) {
+      const safeNum = v => { if (!v && v !== 0) return 0; if (typeof v === 'string' && v.startsWith('=')) return 0; return parseFloat(v) || 0; };
+      const supplier = ((raw.supplier || raw.party || '')).toString().trim();
+      const taxable = safeNum(raw.taxable);
+      const gstin = (raw.gstin||'').toString().trim().toUpperCase();
+      const igst = safeNum(raw.igst); const cgst = safeNum(raw.cgst); const sgst = safeNum(raw.sgst);
+      const autoTax = !igst && !cgst && !sgst ? computeTax(taxable, gstin) : { igst, cgst, sgst };
+      const itc = (raw.itc||'Yes').toString().trim() || 'Yes';
+      const itcAmt = raw.itcAmt ? safeNum(raw.itcAmt) : (itc === 'No' ? 0 : autoTax.igst+autoTax.cgst+autoTax.sgst);
+      return { id:uid(), month:parseMonth(raw.month), date:parseExcelDate(raw.date), supplier, gstin, invNo:(raw.invNo||'').toString().trim(), taxable, igst:autoTax.igst, cgst:autoTax.cgst, sgst:autoTax.sgst, total:taxable+autoTax.igst+autoTax.cgst+autoTax.sgst, itc, itcAmt, remarks:(raw.remarks||'').toString() };
+    },
+    validate(row) {
+      const errs = [];
+      if (!row.month || !MONTHS.includes(row.month)) errs.push('Invalid Month');
+      if (!row.supplier) errs.push('Supplier Name required');
+      if (!row.taxable) errs.push('Taxable Amount required');
+      return errs;
+    },
+    dbKey: 'purchase',
+    refreshFn() { renderPurchaseTable(); renderPurchaseCards(); }
+  },
+
+  rcm: {
+    label: 'RCM Register',
+    columns: [
+      { key:'month',    label:'Month',           required:true,  note:'e.g. Apr-26' },
+      { key:'date',     label:'Date',             required:true,  note:'DD-MM-YYYY' },
+      { key:'supplier', label:'Supplier Name',    required:false, note:'' },
+      { key:'nature',   label:'Nature of Service',required:false, note:'e.g. Import of Software' },
+      { key:'taxable',  label:'Taxable Value',    required:false, note:'' },
+      { key:'igst',     label:'IGST (RCM)',       required:false, note:'' },
+      { key:'cgst',     label:'CGST (RCM)',       required:false, note:`Default ${9265.41}` },
+      { key:'sgst',     label:'SGST (RCM)',       required:false, note:`Default ${9265.41}` },
+      { key:'paid',     label:'Tax Paid',         required:false, note:'Yes or No — default Yes' },
+    ],
+    sampleRow: ['Apr-26','2026-04-05','OVERSEAS VENDOR','Import of Cloud Services','0','0','9265.41','9265.41','Yes'],
+    parseRow(raw) {
+      const safeNum = v => { if (!v && v !== 0) return 0; if (typeof v === 'string' && v.startsWith('=')) return 0; return parseFloat(v) || 0; };
+      const settings = getSettings();
+      const supplier = ((raw.supplier || raw.party || '')).toString().trim();
+      const igst = safeNum(raw.igst);
+      const cgst = safeNum(raw.cgst) || (igst ? 0 : settings.rcmFixed);
+      const sgst = safeNum(raw.sgst) || (igst ? 0 : settings.rcmFixed);
+      const total = igst + cgst + sgst;
+      const paidRaw = (raw.paid||'').toString().trim();
+      const paid = (paidRaw && !paidRaw.startsWith('=')) ? paidRaw : 'Yes';
+      return { id:uid(), month:parseMonth(raw.month), date:parseExcelDate(raw.date), supplier, nature:(raw.nature||'').toString().trim(), taxable:safeNum(raw.taxable), igst, cgst, sgst, total, paid };
+    },
+    validate(row) {
+      const errs = [];
+      if (!row.month || !MONTHS.includes(row.month)) errs.push('Invalid Month');
+      return errs;
+    },
+    dbKey: 'rcm',
+    refreshFn() { renderRcmTable(); }
+  },
+
+  '2b': {
+    label: 'GSTR-2B Data',
+    columns: [
+      { key:'month',    label:'Month',           required:true,  note:'e.g. Apr-26' },
+      { key:'date',     label:'Invoice Date',     required:false, note:'DD-MM-YYYY' },
+      { key:'supplier', label:'Supplier Name',    required:false, note:'' },
+      { key:'gstin',    label:'Supplier GSTIN',   required:false, note:'' },
+      { key:'invNo',    label:'Invoice No',       required:false, note:'' },
+      { key:'taxable',  label:'Taxable Amount',   required:false, note:'' },
+      { key:'igst',     label:'IGST',             required:false, note:'' },
+      { key:'cgst',     label:'CGST',             required:false, note:'' },
+      { key:'sgst',     label:'SGST',             required:false, note:'' },
+    ],
+    sampleRow: ['Apr-26','2026-04-03','ABC SERVICES LLP','06XXXXX','INV/001','50000','0','4500','4500'],
+    parseRow(raw) {
+      return { id:uid(), month:parseMonth(raw.month), date:parseExcelDate(raw.date), supplier:(raw.supplier||'').toString().trim(), gstin:(raw.gstin||'').toString().trim().toUpperCase(), invNo:(raw.invNo||'').toString().trim(), taxable:num(raw.taxable), igst:num(raw.igst), cgst:num(raw.cgst), sgst:num(raw.sgst) };
+    },
+    validate(row) {
+      const errs = [];
+      if (!row.month || !MONTHS.includes(row.month)) errs.push('Invalid Month');
+      return errs;
+    },
+    dbKey: 'data2b',
+    refreshFn() { render2BTable(); }
+  }
+};
+
+// ---- Date parser (handles Excel datetime, serial, DD-MM-YYYY, YYYY-MM-DD, DD-MON-YYYY) ----
+function parseExcelDate(val) {
+  if (!val && val !== 0) return '';
+  
+  // Excel datetime object (dates come from Excel as datetime objects)
+  if (val instanceof Date || (typeof val === 'object' && val.toISOString && val.getTime)) {
+    try { return new Date(val).toISOString().split('T')[0]; } catch(e) {}
+  }
+  
+  if (typeof val === 'number') {
+    const d = new Date(Math.round((val - 25569) * 86400 * 1000));
+    return d.toISOString().split('T')[0];
+  }
+  
+  const s = val.toString().trim();
+  
+  // DD-MM-YYYY or DD/MM/YYYY
+  const dmy = s.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})$/);
+  if (dmy) return `${dmy[3]}-${dmy[2].padStart(2,'0')}-${dmy[1].padStart(2,'0')}`;
+  
+  // YYYY-MM-DD
+  const ymd = s.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})$/);
+  if (ymd) return `${ymd[1]}-${ymd[2].padStart(2,'0')}-${ymd[3].padStart(2,'0')}`;
+  
+  // DD-MMM-YYYY e.g. 01-Apr-2026
+  const dmon = s.match(/^(\d{1,2})[-\/]([A-Za-z]{3,})[-\/](\d{4})$/i);
+  if (dmon) {
+    const months = {jan:'01',feb:'02',mar:'03',apr:'04',may:'05',jun:'06',jul:'07',aug:'08',sep:'09',oct:'10',nov:'11',dec:'12'};
+    const m = months[dmon[2].toLowerCase().substring(0,3)];
+    if (m) return `${dmon[3]}-${m}-${dmon[1].padStart(2,'0')}`;
+  }
+  
+  // Try generic Date parse
+  try {
+    const dt = new Date(s);
+    if (!isNaN(dt.getTime())) return dt.toISOString().split('T')[0];
+  } catch(e) {}
+  
+  return s;
+}
+
+// ---- Month parser: convert datetime/date string to "Apr-26" format ----
+function parseMonth(val) {
+  if (!val && val !== 0) return '';
+
+  const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const s = val.toString().trim();
+  if (MONTHS.includes(s)) return s;
+
+  // Handle portal format: "Apr'26" or "Apr-26" or "Apr 26" (apostrophe, hyphen, space)
+  const portalMatch = s.match(/^([A-Za-z]{3})['\u2019\-\s](\d{2})$/);
+  if (portalMatch) {
+    const mon = portalMatch[1].charAt(0).toUpperCase() + portalMatch[1].slice(1).toLowerCase();
+    const yr = portalMatch[2];
+    const candidate = mon + '-' + yr;
+    if (MONTHS.includes(candidate)) return candidate;
+  }
+
+  // Handle "April 2026" or "April-2026" long form
+  const longMatch = s.match(/^([A-Za-z]+)[\s\-\/](\d{4})$/);
+  if (longMatch) {
+    const idx = monthNames.findIndex(function(m) { return longMatch[1].toLowerCase().startsWith(m.toLowerCase()); });
+    if (idx >= 0) {
+      const yr4 = parseInt(longMatch[2]);
+      const shortYear = (idx + 1) >= 4 ? String(yr4).slice(-2) : String(yr4 + 1).slice(-2);
+      const candidate = monthNames[idx] + '-' + shortYear;
+      if (MONTHS.includes(candidate)) return candidate;
+    }
+  }
+
+  let dt = null;
+  if (val instanceof Date) {
+    dt = val;
+  } else if (typeof val === 'number') {
+    dt = new Date(Math.round((val - 25569) * 86400 * 1000));
+  } else {
+    try { dt = new Date(s); } catch(e) { dt = null; }
+  }
+
+  if (dt && !isNaN(dt.getTime())) {
+    const m = dt.getMonth() + 1;
+    const shortMonth = monthNames[m-1];
+    const shortYear = m >= 4 ? '26' : '27';
+    return shortMonth + '-' + shortYear;
+  }
+
+  return s;
+}
+
+// ================================================================
+// MULTI-SHEET WORKBOOK IMPORT ENGINE
+// ================================================================
+
+let importAllSheetData = {};   // { sheetKey: [{ parsed, errors, status }] }
+let activePreviewSheet = null;
+
+// ---- Open import modal ----
+function openImport(mod) {
+  currentImportModule = mod;
+  importAllSheetData = {};
+  activePreviewSheet = null;
+  document.getElementById('import-preview-area').style.display = 'none';
+  document.getElementById('import-confirm-btn').style.display = 'none';
+  document.getElementById('import-file-input').value = '';
+  document.getElementById('import-zone-text').innerHTML = '<strong>Click to browse</strong> or drag &amp; drop your Excel workbook here';
+  document.getElementById('import-dropzone').classList.remove('drag-over');
+  // Reset month selector
+  document.getElementById('import-month-select').value = '';
+  document.getElementById('import-month-hint').style.display = 'inline';
+  document.getElementById('import-file-section').style.opacity = '0.4';
+  document.getElementById('import-file-section').style.pointerEvents = 'none';
+  document.getElementById('modal-import').classList.add('open');
+}
+
+function closeImport() {
+  document.getElementById('modal-import').classList.remove('open');
+  currentImportModule = null;
+  importAllSheetData = {};
+}
+
+// ---- Drag & drop ----
+function onImportMonthChange() {
+  const m = document.getElementById('import-month-select').value;
+  const fileSection = document.getElementById('import-file-section');
+  const hint = document.getElementById('import-month-hint');
+  if (m) {
+    fileSection.style.opacity = '1';
+    fileSection.style.pointerEvents = 'auto';
+    hint.style.display = 'none';
+    // Reset file if month changes after file was already loaded
+    importAllSheetData = {};
+    document.getElementById('import-preview-area').style.display = 'none';
+    document.getElementById('import-confirm-btn').style.display = 'none';
+    document.getElementById('import-file-input').value = '';
+    document.getElementById('import-zone-text').innerHTML = '<strong>Click to browse</strong> or drag &amp; drop your Excel workbook here';
+  } else {
+    fileSection.style.opacity = '0.4';
+    fileSection.style.pointerEvents = 'none';
+    hint.style.display = 'inline';
+  }
+}
+function handleDragLeave(e) { document.getElementById('import-dropzone').classList.remove('drag-over'); }
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('import-dropzone').classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file) processImportFile(file);
+}
+function handleFileSelect(e) {
+  const file = e.target.files[0];
+  if (file) processImportFile(file);
+}
+
+// ---- Read workbook & detect all sheets ----
+function processImportFile(file) {
+  if (!file.name.toLowerCase().endsWith('.xlsx') && !file.name.toLowerCase().endsWith('.xls')) {
+    showToast('Please upload a .xlsx file', 'error'); return;
+  }
+  document.getElementById('import-zone-text').innerHTML = `<strong style="color:var(--blue)">⏳ Reading ${file.name}…</strong>`;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const wb = XLSX.read(e.target.result, { type:'array', cellDates:true });
+      importAllSheetData = {};
+      let anyFound = false;
+
+      // Map sheet names to modules
+      const moduleMap = {
+        'sales': ['sales'],
+        'returns': ['credit notes', 'creditnotes', 'credit note', 'sales returns', 'returns'],
+        'purchase': ['purchase', 'purchases', 'purchase register'],
+        'rcm': ['rcm', 'reverse charge'],
+        '2b': ['gstr-2b', '2b', 'gstr 2b', 'portal']
+      };
+
+      wb.SheetNames.forEach(sheetName => {
+        const norm = sheetName.trim().toLowerCase();
+        let matchedKey = null;
+        for (const [key, aliases] of Object.entries(moduleMap)) {
+          if (aliases.some(alias => norm.includes(alias) || alias.includes(norm.replace(/\s+/g,'')))) {
+            matchedKey = key;
+            break;
+          }
+        }
+
+        if (matchedKey) {
+          const ws = wb.Sheets[sheetName];
+          const rawRows = XLSX.utils.sheet_to_json(ws, { raw:true, defval:'' });
+          if (rawRows.length > 0) {
+            const selectedMonth = document.getElementById('import-month-select').value;
+            importAllSheetData[matchedKey] = parseSheet(matchedKey, rawRows, selectedMonth);
+            anyFound = true;
+          }
+        }
+      });
+
+      if (!anyFound) {
+        showToast('No matching sheets found. Sheet names must include: Sales, Credit Notes, Purchase, RCM, or GSTR-2B', 'error');
+        document.getElementById('import-zone-text').innerHTML = '<strong>Click to browse</strong> or drag &amp; drop your Excel workbook here';
+        return;
+      }
+
+      document.getElementById('import-zone-text').innerHTML = `<strong style="color:var(--green)">✅ ${file.name}</strong> — ${Object.keys(importAllSheetData).length} sheet(s) found`;
+      const selMonth = document.getElementById('import-month-select').value;
+      document.getElementById('import-overall-summary').innerHTML = `<strong>Month selected: <span style="color:var(--blue)">${selMonth}</span></strong> — all rows will be imported under this month.`;
+      renderWorkbookPreview();
+    } catch(err) {
+      showToast('Failed to read file: ' + err.message, 'error');
+      document.getElementById('import-zone-text').innerHTML = '<strong>Click to browse</strong> or drag &amp; drop your Excel workbook here';
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// ---- Parse single sheet using IMPORT_SCHEMAS ----
+function parseSheet(moduleKey, rawRows, forcedMonth) {
+  const schema = IMPORT_SCHEMAS[moduleKey];
+  if (!schema) return [];
+
+  // Header normalizer - more aggressive
+  const normalise = s => (s||'').toString().trim().toLowerCase().replace(/[^a-z0-9]/g,'');
+  
+  // Build flexible header map with aliases
+  const headerMap = {};
+  schema.columns.forEach(c => {
+    headerMap[normalise(c.label)] = c.key;
+    headerMap[c.key.toLowerCase()] = c.key;
+  });
+  
+  // Add common aliases for key fields
+  const aliases = {
+    'party': ['particulars', 'partyname', 'party', 'customername', 'customer', 'billto'],
+    'supplier': ['particulars', 'suppliername', 'supplier', 'vendorname', 'vendor', 'billto',
+                 'tradelegalname', 'tradename', 'legalname'],
+    'taxable': ['taxable', 'taxableamount', 'taxablevalue', 'amount', 'value',
+                'taxablevaluer', 'taxablevalue', 'taxabilevalue'],
+    'invNo': ['invoiceno', 'invoicenumber', 'invoice', 'invno', 'billno', 'docno', 'invoicenumber'],
+    'date': ['date', 'invoicedate', 'billdate', 'docdate', 'irndate'],
+    'month': ['month', 'period'],
+    'gstin': ['gstin', 'gstinuin', 'gst', 'registrationno',
+              'gstinsupplier',       // GSTIN of supplier (missing "of")
+              'gstinofsupplier',     // GSTIN of supplier (exact normalised form from portal)
+              'gstnofsupplier', 'gstinsoffsupplier', 'suppliergstin'],
+    'igst': ['igst', 'integratedtax', 'integratedtaxr', 'integrated'],
+    'cgst': ['cgst', 'centraltax', 'centraltaxr', 'central'],
+    'sgst': ['sgst', 'statetax', 'stateuttax', 'stateuttaxr', 'stateutax', 'state'],
+  };
+  
+  // Register aliases in headerMap
+  Object.entries(aliases).forEach(([field, aliasList]) => {
+    aliasList.forEach(alias => {
+      headerMap[normalise(alias)] = field;
+    });
+  });
+
+  // Remove irndate from date mapping — IRN Date is not the invoice date
+  delete headerMap['irndate'];
+
+  return rawRows.map((raw, idx) => {
+    const mapped = {};
+    Object.entries(raw).forEach(([k, v]) => {
+      const nk = normalise(k);
+      const schemaKey = headerMap[nk];
+      if (schemaKey) {
+        // Strip Excel formula strings — they come through as "=F2*18%" when cellDates:true
+        // and the cell contains a formula with no cached value
+        if (typeof v === 'string' && v.startsWith('=')) {
+          mapped[schemaKey] = '';
+        } else {
+          mapped[schemaKey] = v;
+        }
+      }
+    });
+
+    let parsed, errors = [];
+    try {
+      parsed = schema.parseRow(mapped);
+      // Override month with the user-selected month — always
+      if (forcedMonth) parsed.month = forcedMonth;
+      errors = schema.validate(parsed);
+    } catch(err) {
+      errors = ['Parse error: ' + err.message];
+      parsed = {};
+    }
+
+    return { rowNum: idx+2, parsed, errors, status: errors.length ? 'error' : 'ok' };
+  });
+}
+
+// ---- Render sheet tabs + preview ----
+function renderWorkbookPreview() {
+  const sheetKeys = Object.keys(importAllSheetData);
+  if (!sheetKeys.length) return;
+
+  // Build tab buttons
+  const tabsEl = document.getElementById('import-sheet-tabs');
+  tabsEl.innerHTML = sheetKeys.map(k => {
+    const rows = importAllSheetData[k];
+    const ok = rows.filter(r => r.status === 'ok').length;
+    const err = rows.filter(r => r.status === 'error').length;
+    const schemaLabel = IMPORT_SCHEMAS[k].label;
+    return `<button class="mode-btn" id="stab-${k}" onclick="switchPreviewSheet('${k}')">
+      ${schemaLabel}
+      <span style="margin-left:4px;font-size:10px">${ok>0?`<span style='color:var(--green)'>✓${ok}</span>`:''}${err>0?`<span style='color:var(--red)'>✗${err}</span>`:''}</span>
+    </button>`;
+  }).join('');
+
+  // Overall summary
+  let totalOk = 0, totalErr = 0;
+  sheetKeys.forEach(k => {
+    importAllSheetData[k].forEach(r => { r.status === 'ok' ? totalOk++ : totalErr++; });
+  });
+  document.getElementById('import-overall-summary').innerHTML =
+    `<strong>✓ Workbook loaded:</strong> ${sheetKeys.length} sheet(s) detected — 
+    <span style="color:var(--green);font-weight:700">${totalOk} valid rows</span>
+    ${totalErr ? `&nbsp;·&nbsp;<span style="color:var(--red)">${totalErr} errors (will skip)</span>` : ''}.`;
+
+  document.getElementById('import-preview-area').style.display = 'block';
+  if (totalOk > 0) document.getElementById('import-confirm-btn').style.display = 'inline-flex';
+
+  // Show first sheet
+  switchPreviewSheet(sheetKeys[0]);
+}
+
+function switchPreviewSheet(key) {
+  activePreviewSheet = key;
+  Object.keys(importAllSheetData).forEach(k => {
+    const btn = document.getElementById('stab-'+k);
+    if (btn) btn.classList.toggle('active', k === key);
+  });
+
+  const rows = importAllSheetData[key];
+  const schema = IMPORT_SCHEMAS[key];
+  const ok = rows.filter(r => r.status === 'ok').length;
+  const err = rows.filter(r => r.status === 'error').length;
+
+  document.getElementById('import-stats').innerHTML = `
+    <span class="import-stat stat-total">Sheet: ${schema.label} — ${rows.length} rows</span>
+    <span class="import-stat stat-ok">✅ Valid: ${ok}</span>
+    ${err ? `<span class="import-stat stat-err">❌ Errors: ${err}</span>` : ''}
+  `;
+
+  const cols = schema.columns;
+  document.getElementById('import-preview-head').innerHTML =
+    `<tr><th>Row</th><th>Status</th>${cols.map(c=>`<th>${c.label}</th>`).join('')}</tr>`;
+
+  document.getElementById('import-preview-body').innerHTML = rows.map(r => {
+    const cls = r.status === 'ok' ? 'row-ok' : 'row-err';
+    const statusCell = r.status === 'ok'
+      ? `<td><span class="badge badge-green">✓ OK</span></td>`
+      : `<td><span class="badge badge-red" title="${r.errors.join('; ')}">✗ ${r.errors[0]}</span></td>`;
+    const cells = cols.map(c => `<td>${r.parsed[c.key] !== undefined ? r.parsed[c.key] : ''}</td>`).join('');
+    return `<tr class="${cls}"><td>${r.rowNum}</td>${statusCell}${cells}</tr>`;
+  }).join('');
+}
+
+// ---- Confirm and import all sheets ----
+function confirmImport() {
+  const sheetKeys = Object.keys(importAllSheetData);
+  let totalImported = 0;
+  const summary = [];
+
+  sheetKeys.forEach(key => {
+    const schema = IMPORT_SCHEMAS[key];
+    const good = importAllSheetData[key].filter(r => r.status === 'ok').map(r => r.parsed);
+    if (good.length) {
+      DB[schema.dbKey] = [...DB[schema.dbKey], ...good];
+      persist(schema.dbKey);
+      schema.refreshFn();
+      summary.push(`${schema.label}: ${good.length}`);
+      totalImported += good.length;
+    }
+  });
+
+  if (!totalImported) { showToast('No valid rows to import', 'error'); return; }
+  closeImport();
+  showToast(`✅ Imported ${totalImported} total rows — ${summary.join(' | ')}`, 'success');
+}
+
+// ---- Download master template (all 5 sheets in one workbook) ----
+function downloadMasterTemplate() {
+  if (typeof XLSX === 'undefined') {
+    showToast('Excel library not loaded yet — please wait a moment and try again', 'error');
+    return;
+  }
+  const wb = XLSX.utils.book_new();
+
+  // ---------- Sheet: Sales ----------
+  const salesHeaders = ['Month','Date','Particulars','GSTIN/UIN','Invoice No.','Taxable','Integrated Tax','Central Tax','State Tax','Invoice Amount'];
+  const salesData = [
+    salesHeaders,
+    ['Apr-26','01-04-2026','DENAVE INDIA PVT LTD','09AABCD0052F1Z6','GTPL/26-27/0001','728000','131040','','','859040'],
+    ['Apr-26','05-04-2026','PRIME CONCERN','06AJJPB3110A1Z9','GTPL/26-27/0002','160000','','14400','14400','188800'],
+    ['Apr-26','10-04-2026','YOUR CLIENT NAME','06AABCE0784F2ZV','GTPL/26-27/0003','55000','','','',''],
+  ];
+  const wsSales = XLSX.utils.aoa_to_sheet(salesData);
+  wsSales['!cols'] = salesHeaders.map(h => ({ wch: Math.max(h.length + 4, 16) }));
+  XLSX.utils.book_append_sheet(wb, wsSales, 'Sales');
+
+  // ---------- Sheet: Sales Returns ----------
+  const retHeaders = ['Month','Date','Particulars','GSTIN/UIN','CN No.','Original Invoice','Reason','Taxable','Integrated Tax','Central Tax','State Tax'];
+  const retData = [
+    retHeaders,
+    ['Apr-26','15-04-2026','DENAVE INDIA PVT LTD','09AABCD0052F1Z6','CN-00001','GTPL/26-27/0001','Wrong billing','10000','1800','',''],
+  ];
+  const wsRet = XLSX.utils.aoa_to_sheet(retData);
+  wsRet['!cols'] = retHeaders.map(h => ({ wch: Math.max(h.length + 4, 16) }));
+  XLSX.utils.book_append_sheet(wb, wsRet, 'Credit Notes');
+
+  // ---------- Sheet: Purchase ----------
+  const purHeaders = ['Particulars','GSTIN/UIN','Services','Invoice','Invoice Date','Taxable','Integrated Tax','Central Tax','State Tax','Cess','Total Tax','Remarks','From 2B','Month'];
+  const purData = [
+    purHeaders,
+    ['ABC SERVICES LLP','06AABCS1234F1Z5','Software Maintenance','INV/2026/001','01-04-2026','50000','','4500','4500','0','9000','','No','Apr-26'],
+    ['XYZ CLOUD PVT LTD','09AABCX5678G1Z3','Cloud Subscription','INV/2026/002','05-04-2026','100000','18000','','','0','18000','','Yes','Apr-26'],
+  ];
+  const wsPur = XLSX.utils.aoa_to_sheet(purData);
+  wsPur['!cols'] = purHeaders.map(h => ({ wch: Math.max(h.length + 4, 16) }));
+  XLSX.utils.book_append_sheet(wb, wsPur, 'Purchase');
+
+  // ---------- Sheet: RCM ----------
+  const rcmHeaders = ['Month','Date','Supplier Name','Nature of Service','Taxable','Integrated Tax','Central Tax','State Tax','RCM Tax Paid'];
+  const rcmData = [
+    rcmHeaders,
+    ['Apr-26','05-04-2026','OVERSEAS VENDOR LTD','Import of Cloud Services','0','0','9265.41','9265.41','Yes'],
+    ['May-26','05-05-2026','OVERSEAS VENDOR LTD','Import of Cloud Services','0','0','9265.41','9265.41','Yes'],
+  ];
+  const wsRcm = XLSX.utils.aoa_to_sheet(rcmData);
+  wsRcm['!cols'] = rcmHeaders.map(h => ({ wch: Math.max(h.length + 4, 16) }));
+  XLSX.utils.book_append_sheet(wb, wsRcm, 'RCM');
+
+  // ---------- Sheet: GSTR-2B (exact portal format) ----------
+  const b2Headers = [
+    'GSTIN of supplier','Trade/Legal name','Invoice number','Invoice type','Invoice Date',
+    'Invoice Value(₹)','Place of supply','Supply Attract Reverse Charge',
+    ' Taxable Value (₹) ',' Integrated Tax(₹) ',' Central Tax(₹) ',' State/UT Tax(₹) ',' Cess(₹) ',
+    ' month ','GSTR-1/IFF/GSTR-5 Period','ITC Availability','Reason',
+    'Applicable % of Tax Rate','Source','IRN','IRN Date'
+  ];
+  const b2Data = [
+    b2Headers,
+    ['06AABCS1234F1Z5','ABC SERVICES LLP','INV/2026/001','Regular','01-04-2026','59000','06-Haryana','N','50000','','4500','4500','0','Apr-26','042026','Yes','','100','GSTR1','',''],
+    ['09AABCX5678G1Z3','XYZ CLOUD PVT LTD','INV/2026/002','Regular','05-04-2026','118000','09-Uttar Pradesh','N','100000','18000','','','0','Apr-26','042026','Yes','','100','GSTR1','',''],
+  ];
+  const wsB2 = XLSX.utils.aoa_to_sheet(b2Data);
+  wsB2['!cols'] = b2Headers.map(h => ({ wch: Math.max(h.trim().length + 4, 14) }));
+  XLSX.utils.book_append_sheet(wb, wsB2, 'GSTR-2B');
+
+  // ---------- Sheet: Instructions ----------
+  const instrData = [
+    ['GST Reconciliation Tool — Master Import Template', '', 'FY 2026-27'],
+    [''],
+    ['WORKBOOK STRUCTURE:'],
+    ['Sheet Name',       'Module',          'Key Required Columns'],
+    ['Sales',            'Sales Register',  'Month, Date, Particulars, Taxable'],
+    ['Credit Notes',    'Credit Notes',    'Month, Date, Particulars, Taxable'],
+    ['Purchase',         'ITC Register',    'Particulars, Invoice Date, Taxable, Month (last col)'],
+    ['RCM',              'RCM Register',    'Month, Date'],
+    ['GSTR-2B',          '2B Reconciliation','GSTIN of supplier, Invoice number, month (2nd last col)'],
+    [''],
+    ['VALID MONTH VALUES (copy exactly):'],
+    [MONTHS.join('   |   ')],
+    [''],
+    ['DATE FORMAT:',     'DD-MM-YYYY  (e.g. 01-04-2026)'],
+    [''],
+    ['TAX AUTO-CALCULATION:'],
+    ['If Integrated Tax / Central Tax / State Tax are left blank, they are auto-calculated:'],
+    ['  GSTIN starts with 06  →  Central Tax (CGST) + State Tax (SGST) each @ 9%'],
+    ['  GSTIN starts with other state code  →  Integrated Tax (IGST) @ 18%'],
+    ['  GSTIN blank  →  Zero tax (treated as export)'],
+    [''],
+    ['PURCHASE SHEET NOTES:'],
+    ['"Particulars" = Supplier Name'],
+    ['"Month" is the LAST column — must be filled (e.g. Apr-26)'],
+    ['"From 2B" = Yes/No, for your reference only'],
+    [''],
+    ['GSTR-2B SHEET NOTES:'],
+    ['You can directly paste data exported from the GST portal — column names match exactly.'],
+    ['"month" column (2nd from last) must be filled in the format Apr-26, May-26 etc.'],
+    [''],
+    ['IMPORTANT: Do NOT rename any sheet tabs or column headers.'],
+    ['Sheets left empty are skipped automatically during import.'],
+  ];
+  const wsInstr = XLSX.utils.aoa_to_sheet(instrData);
+  wsInstr['!cols'] = [{ wch: 45 }, { wch: 22 }, { wch: 50 }];
+  XLSX.utils.book_append_sheet(wb, wsInstr, 'Instructions');
+
+  XLSX.writeFile(wb, 'GST_Master_Import_Template_FY2627.xlsx');
+  showToast('✅ Master template downloaded — 5 sheets ready to fill', 'success');
+}
+
+// Keep this as alias so any old references don't break
+function downloadTemplate(mod) { downloadMasterTemplate(); }
+
+// ===============================================================
+// INIT
+// ===============================================================
+document.addEventListener('DOMContentLoaded', () => {
+  populateAllDropdowns();
+  preloadSampleData();
+  loadSettingsForm();
+  renderSalesTable();
+  renderSalesCards();
+  renderReturnsTable();
+  renderPurchaseTable();
+  renderPurchaseCards();
+  renderRcmTable();
+  render2BTable();
+
+  // Close modal on overlay click
+  document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', e => {
+      if (e.target === overlay) {
+        if (overlay.id === 'modal-import') { closeImport(); return; }
+        const modalId = overlay.id.replace('modal-','');
+        closeModal(modalId);
+      }
+    });
+  });
+});
+
+// Start auth on page load
+window.addEventListener('load', initAuth);
+</script>
+</div><!-- end app-wrapper -->
+</body>
+</html>
