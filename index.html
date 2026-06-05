@@ -227,7 +227,64 @@
     .cards-row { grid-template-columns: 1fr 1fr; }
   }
   
-  /* SETTINGS */
+  /* DASHBOARD */
+  .dash-kpi-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:14px; margin-bottom:20px; }
+  .dash-kpi { background:var(--white); border-radius:var(--radius-lg); padding:18px 20px; border:1px solid var(--gray2); box-shadow:var(--shadow); position:relative; overflow:hidden; }
+  .dash-kpi::before { content:''; position:absolute; top:0; left:0; width:4px; height:100%; background:var(--accent-color,var(--blue)); }
+  .dash-kpi-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:var(--gray5); margin-bottom:6px; }
+  .dash-kpi-value { font-size:22px; font-weight:800; color:var(--navy); font-family:var(--font-mono); line-height:1.1; }
+  .dash-kpi-sub { font-size:11px; color:var(--gray4); margin-top:4px; }
+  .dash-kpi-change { font-size:11px; font-weight:600; margin-top:4px; }
+  .dash-kpi-change.up { color:var(--green); }
+  .dash-kpi-change.down { color:var(--red); }
+
+  .dash-grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px; }
+  .dash-grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-bottom:20px; }
+  .dash-grid-13 { display:grid; grid-template-columns:1fr 2fr; gap:16px; margin-bottom:20px; }
+  @media(max-width:900px){ .dash-grid-2,.dash-grid-3,.dash-grid-13{ grid-template-columns:1fr; } }
+
+  .dash-card { background:var(--white); border-radius:var(--radius-lg); border:1px solid var(--gray2); box-shadow:var(--shadow); overflow:hidden; }
+  .dash-card-hdr { padding:14px 18px; border-bottom:1px solid var(--gray2); display:flex; align-items:center; justify-content:space-between; }
+  .dash-card-title { font-size:12px; font-weight:700; color:var(--navy); text-transform:uppercase; letter-spacing:0.4px; }
+  .dash-card-body { padding:16px 18px; }
+
+  /* Bar chart */
+  .bar-chart { display:flex; flex-direction:column; gap:8px; }
+  .bar-row { display:flex; align-items:center; gap:10px; }
+  .bar-label { font-size:11px; color:var(--gray6); width:90px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex-shrink:0; }
+  .bar-track { flex:1; height:10px; background:var(--gray1); border-radius:20px; overflow:hidden; }
+  .bar-fill { height:100%; border-radius:20px; transition:width 0.6s cubic-bezier(.16,1,.3,1); }
+  .bar-val { font-size:11px; font-family:var(--font-mono); color:var(--gray6); width:90px; text-align:right; flex-shrink:0; }
+
+  /* Sparkline month chart */
+  .month-chart { display:flex; align-items:flex-end; gap:4px; height:60px; padding:4px 0; }
+  .month-bar-wrap { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; height:100%; }
+  .month-bar { width:100%; border-radius:3px 3px 0 0; transition:height 0.4s cubic-bezier(.16,1,.3,1); min-height:2px; }
+  .month-label { font-size:8px; color:var(--gray4); white-space:nowrap; }
+
+  /* ITC health meter */
+  .itc-meter { background:var(--gray1); border-radius:20px; height:14px; overflow:hidden; margin:8px 0; }
+  .itc-fill { height:100%; border-radius:20px; background:linear-gradient(90deg,var(--green),#34d399); transition:width 0.6s; }
+
+  /* Status dots */
+  .status-row { display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--gray1); font-size:12px; }
+  .status-row:last-child { border-bottom:none; }
+  .status-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+
+  /* Top party table inside dash */
+  .dash-mini-table { width:100%; border-collapse:collapse; font-size:12px; }
+  .dash-mini-table th { font-size:10px; font-weight:700; color:var(--gray5); text-transform:uppercase; letter-spacing:0.4px; padding:6px 8px; border-bottom:1.5px solid var(--gray2); text-align:left; background:none; }
+  .dash-mini-table td { padding:7px 8px; border-bottom:1px solid var(--gray1); color:var(--gray7); }
+  .dash-mini-table tr:last-child td { border-bottom:none; }
+  .dash-mini-table tr:hover td { background:var(--gray0); }
+
+  /* Pending items */
+  .pending-item { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid var(--gray1); }
+  .pending-item:last-child { border-bottom:none; }
+  .pending-icon { width:30px; height:30px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; }
+
+  .dash-empty { text-align:center; padding:30px; color:var(--gray4); font-size:12px; }
+
   .settings-section { background: var(--white); border-radius: var(--radius-lg); padding: 24px; border: 1px solid var(--gray2); margin-bottom: 16px; box-shadow: var(--shadow); }
   .settings-section h3 { font-size: 13px; font-weight: 700; color: var(--navy); margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid var(--blue); padding-bottom: 8px; display: inline-block; }
   
@@ -584,13 +641,16 @@
     <button class="btn-header" onclick="document.getElementById('importFile').click()">⬆ Import JSON</button>
     <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
     <button class="btn-header" style="color:#f87171" onclick="clearAllData()">🗑 Clear All</button>
+    <button id="cloud-save-btn" class="btn-header" style="background:#059669;color:#fff;border-color:#059669;font-weight:600;display:none" onclick="manualSaveAll()">💾 Save to Cloud</button>
+    <span id="cloud-save-status" style="font-size:11px;color:#6ee7b7;display:none;white-space:nowrap"></span>
     <div id="header-user-area"></div>
   </div>
 </div>
 
 <!-- NAV TABS -->
 <div id="nav-tabs">
-  <div class="nav-tab active" onclick="switchTab('sales')" id="tab-sales"><span class="tab-icon">📤</span>Sales</div>
+  <div class="nav-tab active" onclick="switchTab('dashboard')" id="tab-dashboard"><span class="tab-icon">🏠</span>Dashboard</div>
+  <div class="nav-tab" onclick="switchTab('sales')" id="tab-sales"><span class="tab-icon">📤</span>Sales</div>
   <div class="nav-tab" onclick="switchTab('returns')" id="tab-returns"><span class="tab-icon">↩</span>Credit Notes</div>
   <div class="nav-tab" onclick="switchTab('purchase')" id="tab-purchase"><span class="tab-icon">📥</span>Purchase</div>
   <div class="nav-tab" onclick="switchTab('rcm')" id="tab-rcm"><span class="tab-icon">🔄</span>RCM</div>
@@ -603,8 +663,25 @@
 <!-- MAIN CONTENT -->
 <div id="main-content">
 
+  <!-- ===== DASHBOARD ===== -->
+  <div id="mod-dashboard" class="module active">
+    <div class="module-header">
+      <div>
+        <div class="module-title">Dashboard</div>
+        <div class="module-subtitle" id="dash-subtitle">FY 2026-27 — Overview</div>
+      </div>
+      <div class="module-actions">
+        <select id="dash-month-filter" onchange="renderDashboard()" style="padding:6px 12px;border:1px solid var(--gray3);border-radius:var(--radius);font-size:12px;background:var(--gray0);color:var(--gray8)">
+          <option value="">All Months</option>
+        </select>
+        <button class="btn btn-outline" onclick="renderDashboard()">↻ Refresh</button>
+      </div>
+    </div>
+    <div id="dashboard-content"></div>
+  </div>
+
   <!-- ===== MODULE 1: SALES ===== -->
-  <div id="mod-sales" class="module active">
+  <div id="mod-sales" class="module">
     <div class="module-header">
       <div>
         <div class="module-title">Sales Register</div>
@@ -1278,16 +1355,22 @@ async function loadProfileAndLaunch() {
 // ── Logout ──
 async function doLogout() {
   stopCompanySync();
+  DB.sales=[]; DB.returns=[]; DB.purchase=[]; DB.rcm=[]; DB.data2b=[]; DB.recoDecisions={};
+  ['sales','returns','purchase','rcm','data2b'].forEach(k => saveDataKey(k, []));
+  CURRENT_USER    = null;
+  CURRENT_PROFILE = null;
+  CURRENT_VIEWING_USER = null;
+  _adminEmail     = '';
+  _adminPass      = '';
+  // Hide save button
+  const saveBtn = document.getElementById('cloud-save-btn');
+  if (saveBtn) saveBtn.style.display = 'none';
   await _supa.auth.signOut({ scope: 'global' });
-  // Clear all local storage to ensure no session leaks
+  // Clear all Supabase session keys from localStorage
   try {
     const keys = Object.keys(localStorage).filter(k => k.startsWith('sb-'));
     keys.forEach(k => localStorage.removeItem(k));
   } catch(e) {}
-  CURRENT_USER    = null;
-  CURRENT_PROFILE = null;
-  _adminEmail     = '';
-  _adminPass      = '';
   document.getElementById('admin-panel').classList.remove('visible');
   document.getElementById('app-wrapper').style.display = 'none';
   document.getElementById('login-email').value    = '';
@@ -1299,6 +1382,9 @@ async function doLogout() {
 // ── Show app for regular user ──
 function showAppForUser() {
   document.getElementById('app-wrapper').style.display = 'block';
+  // Show the manual Save to Cloud button for users
+  const saveBtn = document.getElementById('cloud-save-btn');
+  if (saveBtn) saveBtn.style.display = 'inline-flex';
   const area = document.getElementById('header-user-area');
   if (area && CURRENT_PROFILE.role !== 'admin') {
     area.innerHTML = `
@@ -1415,6 +1501,9 @@ async function adminViewCompanyData(companyId, companyName) {
 
   document.getElementById('app-wrapper').style.display = 'block';
   document.getElementById('hdr-company').textContent = companyName;
+  // Show save button for admin viewing company data
+  const saveBtn = document.getElementById('cloud-save-btn');
+  if (saveBtn) saveBtn.style.display = 'inline-flex';
   refreshAll();
 
   // Subscribe to realtime updates for this company
@@ -1545,16 +1634,26 @@ async function adminCreateUser() {
 
 // ── Admin: open GST tool — pick a company first ──
 async function adminOpenGSTTool() {
+  // If admin has their own company assigned, open it directly — no picker needed
+  if (CURRENT_PROFILE?.company_id) {
+    const { data: company } = await _supa.from('companies').select('id,name').eq('id', CURRENT_PROFILE.company_id).single();
+    if (company) { adminViewCompanyData(company.id, company.name); return; }
+  }
+
   const { data: companies } = await _supa.from('companies').select('id,name').eq('is_active', true).order('name');
   if (!companies || companies.length === 0) {
     showToast('No companies yet. Create one first.'); return;
   }
+  // Only one company — go straight to it
   if (companies.length === 1) {
     adminViewCompanyData(companies[0].id, companies[0].name); return;
   }
-  // Show picker
+  // Multiple companies — show picker once
+  // Remove any existing picker first to avoid duplicates
+  document.getElementById('admin-company-picker-overlay')?.remove();
   const opts = companies.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
   const pick = document.createElement('div');
+  pick.id = 'admin-company-picker-overlay';
   pick.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:99998;display:flex;align-items:center;justify-content:center';
   pick.innerHTML = `
     <div style="background:#fff;border-radius:16px;padding:28px;width:360px;box-shadow:0 25px 60px rgba(0,0,0,0.3)">
@@ -1563,8 +1662,8 @@ async function adminOpenGSTTool() {
         ${opts}
       </select>
       <div style="display:flex;gap:8px">
-        <button onclick="this.closest('div[style]').remove()" class="btn btn-outline" style="flex:1">Cancel</button>
-        <button onclick="const s=document.getElementById('admin-company-picker');const t=s.options[s.selectedIndex].text;this.closest('div[style]').remove();adminViewCompanyData(s.value,t)" class="btn btn-primary" style="flex:1">Open</button>
+        <button onclick="document.getElementById('admin-company-picker-overlay').remove()" class="btn btn-outline" style="flex:1">Cancel</button>
+        <button onclick="const s=document.getElementById('admin-company-picker');const t=s.options[s.selectedIndex].text;document.getElementById('admin-company-picker-overlay').remove();adminViewCompanyData(s.value,t)" class="btn btn-primary" style="flex:1">Open</button>
       </div>
     </div>`;
   document.body.appendChild(pick);
@@ -1607,8 +1706,12 @@ async function adminViewUserData(userId, username) {
 function backToAdminPanel() {
   stopCompanySync();
   document.getElementById('app-wrapper').style.display = 'none';
+  // Hide save button when going back to admin
+  const saveBtn = document.getElementById('cloud-save-btn');
+  if (saveBtn) saveBtn.style.display = 'none';
   CURRENT_VIEWING_USER = null;
   DB.sales=[]; DB.returns=[]; DB.purchase=[]; DB.rcm=[]; DB.data2b=[]; DB.recoDecisions={};
+  ['sales','returns','purchase','rcm','data2b'].forEach(k => saveDataKey(k, []));
   showAdminPanel();
 }
 
@@ -1694,51 +1797,27 @@ async function adminResetPassword() {
   }
 }
 
-// ── Realtime sync — subscribe to company data changes ──
+// ── Realtime sync — only for ADMIN viewing a company ──
 let _realtimeChannel = null;
 let _pollInterval    = null;
 let _currentCompanyId = null;
 
+// USER: no polling, no realtime — they just save data, that's it
+// ADMIN: polls to see latest user data when viewing a company
+
 function subscribeToCompanyRealtime(companyId) {
+  stopCompanySync();
   _currentCompanyId = companyId;
+  console.log('🔵 Admin polling started for company:', companyId);
 
-  // Clear any existing subscription and polling
-  if (_realtimeChannel) { try { _supa.removeChannel(_realtimeChannel); } catch(e){} _realtimeChannel = null; }
-  if (_pollInterval)    { clearInterval(_pollInterval); _pollInterval = null; }
-
-  console.log('🔵 Starting sync for company:', companyId);
-
-  // ── Realtime via postgres_changes ──
-  _realtimeChannel = _supa
-    .channel(`company_${companyId}_${Date.now()}`)
-    .on('postgres_changes', {
-      event: '*',
-      schema: 'public',
-      table: 'gst_data'
-    }, async (payload) => {
-      console.log('🟢 Realtime event received:', payload);
-      const changedCompany = payload.new?.company_id || payload.old?.company_id;
-      if (changedCompany !== companyId) return;
-      const changedKey = payload.new?.data_key || payload.old?.data_key;
-      if (!changedKey || !DB.hasOwnProperty(changedKey)) return;
-      if (_lastSavedKey === changedKey && Date.now() - _lastSavedTime < 5000) return;
-      await reloadCompanyKey(companyId, changedKey);
-      showToast(`🔄 ${changedKey} updated`);
-    })
-    .subscribe((status) => {
-      console.log('🔵 Realtime status:', status);
-      showToast(`Sync: ${status}`);
-    });
-
-  // ── Polling fallback every 10 seconds ──
-  console.log('🟡 Starting 10s polling for company:', companyId);
+  // Admin polls every 15s to see if user made any changes
   _pollInterval = setInterval(async () => {
-    if (!_currentCompanyId) return;
-    console.log('🟡 Polling...', new Date().toLocaleTimeString());
+    if (!_currentCompanyId || _currentCompanyId !== companyId) return;
+    console.log('🟡 Admin polling...', new Date().toLocaleTimeString());
     const { data: rows, error } = await _supa
       .from('gst_data')
       .select('data_key,data_value')
-      .eq('company_id', _currentCompanyId);
+      .eq('company_id', companyId);
     if (error) { console.error('Poll error:', error); return; }
     if (!rows) return;
     let changed = false;
@@ -1747,14 +1826,12 @@ function subscribeToCompanyRealtime(companyId) {
       const newVal = JSON.stringify(r.data_value);
       const oldVal = JSON.stringify(DB[r.data_key]);
       if (newVal !== oldVal) {
-        console.log('🟢 Change detected in key:', r.data_key);
         DB[r.data_key] = r.data_value;
         changed = true;
       }
     });
-    if (changed) { refreshAll(); showToast('🔄 Data synced'); }
-    else { console.log('⚪ No changes found'); }
-  }, 10000);
+    if (changed) { refreshAll(); showToast('🔄 User data updated'); }
+  }, 15000);
 }
 
 async function reloadCompanyKey(companyId, key) {
@@ -1782,7 +1859,10 @@ async function loadUserDataFromSupabase() {
   const uid       = CURRENT_USER.id;
   const companyId = CURRENT_PROFILE?.company_id || null;
 
-  // Clear localStorage so old data from previous sessions never bleeds in
+  // Stop any leftover sync
+  stopCompanySync();
+
+  // Wipe DB completely — fresh load
   DB.sales=[]; DB.returns=[]; DB.purchase=[]; DB.rcm=[]; DB.data2b=[]; DB.recoDecisions={};
   ['sales','returns','purchase','rcm','data2b'].forEach(k => saveDataKey(k, []));
 
@@ -1794,21 +1874,24 @@ async function loadUserDataFromSupabase() {
     document.getElementById('hdr-company').textContent = CURRENT_PROFILE.username;
   }
 
-  // Load GST data — by company if assigned, else by user
+  // Load this company's data once — that's it, no polling for users
   const { data: rows } = companyId
     ? await _supa.from('gst_data').select('data_key,data_value').eq('company_id', companyId)
-    : await _supa.from('gst_data').select('data_key,data_value').eq('user_id', uid);
+    : await _supa.from('gst_data').select('data_key,data_value').eq('user_id', uid).is('company_id', null);
 
   if (rows) rows.forEach(r => { if (DB.hasOwnProperty(r.data_key)) DB[r.data_key] = r.data_value; });
   refreshAll();
+  renderDashboard();
 
-  // Subscribe to realtime for this company
-  if (companyId) subscribeToCompanyRealtime(companyId);
+  // ✅ NO polling for users — user saves data, admin reads it. That's the whole sync model.
 }
 
 async function saveUserDataToSupabase(key) {
   const uid       = CURRENT_USER.id;
-  const companyId = CURRENT_PROFILE?.company_id || null;
+  // Use CURRENT_VIEWING_USER company if admin is viewing, else user's own company
+  const companyId = CURRENT_VIEWING_USER?.isCompany
+    ? CURRENT_VIEWING_USER.id
+    : (CURRENT_PROFILE?.company_id || null);
   const value     = DB[key];
 
   console.log('💾 Saving key:', key, '| company:', companyId, '| user:', uid);
@@ -1817,61 +1900,60 @@ async function saveUserDataToSupabase(key) {
   _lastSavedTime = Date.now();
 
   if (companyId) {
-    // First check if row exists for this company+key
-    const { data: existing } = await _supa
-      .from('gst_data')
-      .select('id')
-      .eq('company_id', companyId)
-      .eq('data_key', key)
-      .maybeSingle();
-
-    if (existing) {
-      // Update existing row
-      await _supa.from('gst_data')
-        .update({ data_value: value, user_id: uid, updated_at: new Date().toISOString() })
-        .eq('company_id', companyId)
-        .eq('data_key', key);
-    } else {
-      // Insert new row
-      await _supa.from('gst_data')
-        .insert({ company_id: companyId, user_id: uid, data_key: key, data_value: value, updated_at: new Date().toISOString() });
-    }
+    // Upsert — insert or update, strictly scoped to this company only
+    const { error } = await _supa.from('gst_data')
+      .upsert(
+        { company_id: companyId, user_id: uid, data_key: key, data_value: value, updated_at: new Date().toISOString() },
+        { onConflict: 'company_id,data_key' }
+      );
+    if (error) throw error;
   } else {
-    // No company — save by user only
-    const { data: existing } = await _supa
-      .from('gst_data')
-      .select('id')
-      .eq('user_id', uid)
-      .eq('data_key', key)
-      .is('company_id', null)
-      .maybeSingle();
-
-    if (existing) {
-      await _supa.from('gst_data')
-        .update({ data_value: value, updated_at: new Date().toISOString() })
-        .eq('user_id', uid)
-        .eq('data_key', key);
-    } else {
-      await _supa.from('gst_data')
-        .insert({ user_id: uid, data_key: key, data_value: value, updated_at: new Date().toISOString() });
-    }
+    // No company — save by user only, strictly scoped to this user
+    const { error } = await _supa.from('gst_data')
+      .upsert(
+        { user_id: uid, company_id: null, data_key: key, data_value: value, updated_at: new Date().toISOString() },
+        { onConflict: 'user_id,data_key' }
+      );
+    if (error) throw error;
   }
+}
+
+// ── Manual Save All to Supabase ──
+async function manualSaveAll() {
+  if (!CURRENT_USER) { showToast('Not logged in', 'error'); return; }
+  const btn = document.getElementById('cloud-save-btn');
+  btn.textContent = '⏳ Saving…';
+  btn.disabled = true;
+  try {
+    const keys = ['sales','returns','purchase','rcm','data2b','recoDecisions'];
+    for (const key of keys) {
+      await saveUserDataToSupabase(key);
+    }
+    showCloudSaveStatus('✅ All data saved to cloud!');
+    showToast('✅ All data saved to cloud!', 'success');
+  } catch(err) {
+    showCloudSaveStatus('❌ Save failed — check connection', 'error');
+    showToast('❌ Cloud save failed: ' + err.message, 'error');
+    console.error('Manual save failed:', err);
+  } finally {
+    btn.textContent = '💾 Save to Cloud';
+    btn.disabled = false;
+  }
+}
+
+let _cloudStatusTimer = null;
+function showCloudSaveStatus(msg, type = 'ok') {
+  const el = document.getElementById('cloud-save-status');
+  if (!el) return;
+  el.style.display = 'inline';
+  el.style.color = type === 'error' ? '#f87171' : type === 'warn' ? '#fcd34d' : '#6ee7b7';
+  el.textContent = msg;
+  if (_cloudStatusTimer) clearTimeout(_cloudStatusTimer);
+  _cloudStatusTimer = setTimeout(() => { el.style.display = 'none'; }, 4000);
 }
 
 // ── Override persist to save to Supabase when logged in ──
-const _originalPersist = window._originalPersist || null;
-
-function persist(key) {
-  if (key === 'recoDecisions') {
-    localStorage.setItem(KEYS.recoDecisions, JSON.stringify(DB.recoDecisions));
-  } else {
-    saveDataKey(key, DB[key]);
-  }
-  // Also save to Supabase if user is logged in
-  if (CURRENT_USER && ['sales','returns','purchase','rcm','data2b','recoDecisions'].includes(key)) {
-    saveUserDataToSupabase(key);
-  }
-}
+// (persist is already defined in the data layer above with Supabase support)
 
 // ── Check for existing session on page load ──
 async function initAuth() {
@@ -1973,6 +2055,15 @@ function persist(key) {
     localStorage.setItem(KEYS.recoDecisions, JSON.stringify(DB.recoDecisions));
   } else {
     saveDataKey(key, DB[key]);
+  }
+  // Save to Supabase if user is logged in
+  if (CURRENT_USER && ['sales','returns','purchase','rcm','data2b','recoDecisions'].includes(key)) {
+    saveUserDataToSupabase(key).then(() => {
+      showCloudSaveStatus('✅ Saved to cloud');
+    }).catch(err => {
+      showCloudSaveStatus('⚠ Cloud save failed — use 💾 Save button', 'warn');
+      console.error('Auto-save failed:', err);
+    });
   }
 }
 
@@ -2649,12 +2740,15 @@ function switch2BTab(tab) {
   if (tab === 'itc') renderITCSummary();
 }
 
-function recoKey(gstin, invNo) {
-  return ((gstin||'').toString().trim().toUpperCase()) + '||' + ((invNo||'').toString().trim().toUpperCase());
+function recoKey(gstin, invNo, month) {
+  const g = (gstin||'').toString().trim().toUpperCase();
+  const i = (invNo||'').toString().trim().toUpperCase();
+  const m = (month||'').toString().trim();
+  return m ? `${g}||${i}||${m}` : `${g}||${i}`;
 }
 
-function setRecoDecision(gstin, invNo, decision) {
-  const k = recoKey(gstin, invNo);
+function setRecoDecision(gstin, invNo, month, decision) {
+  const k = recoKey(gstin, invNo, month);
   if (decision === 'none') {
     delete DB.recoDecisions[k];
   } else {
@@ -2675,10 +2769,11 @@ function run2BReco() {
 
   // Step 1 — walk purchase (books) entries
   DB.purchase.filter(r => r.itc !== 'No').forEach(b => {
-    const k = recoKey(b.gstin, b.invNo);
+    const k = recoKey(b.gstin, b.invNo, b.month);
     if (!mergedMap.has(k)) {
       mergedMap.set(k, {
-        gstin: b.gstin, invNo: b.invNo, month: b.month,
+        gstin: b.gstin, invNo: b.invNo,
+        booksMonth: b.month, b2Month: null,
         supplier: b.supplier,
         booksItc: 0, b2Itc: 0,
         inBooks: false, in2B: false
@@ -2686,16 +2781,18 @@ function run2BReco() {
     }
     const e = mergedMap.get(k);
     e.inBooks = true;
+    e.booksMonth = b.month;
     e.booksItc += b.itcAmt;
     if (!e.supplier) e.supplier = b.supplier;
   });
 
   // Step 2 — walk 2B entries
   DB.data2b.forEach(d => {
-    const k = recoKey(d.gstin, d.invNo);
+    const k = recoKey(d.gstin, d.invNo, d.month);
     if (!mergedMap.has(k)) {
       mergedMap.set(k, {
-        gstin: d.gstin, invNo: d.invNo, month: d.month,
+        gstin: d.gstin, invNo: d.invNo,
+        booksMonth: null, b2Month: d.month,
         supplier: d.supplier,
         booksItc: 0, b2Itc: 0,
         inBooks: false, in2B: false
@@ -2703,9 +2800,9 @@ function run2BReco() {
     }
     const e = mergedMap.get(k);
     e.in2B = true;
+    e.b2Month = d.month;
     e.b2Itc += d.igst + d.cgst + d.sgst;
     if (!e.supplier) e.supplier = d.supplier;
-    if (!e.month) e.month = d.month;
   });
 
   // Step 3 — classify and filter
@@ -2715,12 +2812,16 @@ function run2BReco() {
     if (e.inBooks && e.in2B)       status = 'matched';
     else if (e.inBooks && !e.in2B) status = 'only-books';
     else                           status = 'only-2b';
+    // Display month: prefer books month, fallback to 2B month
+    const month = e.booksMonth || e.b2Month || '';
     const decision = DB.recoDecisions[k] || 'none';
-    rows.push({ ...e, status, decision, key: k });
+    rows.push({ ...e, month, status, decision, key: k });
   });
 
-  // Month filter
-  if (monthF) rows = rows.filter(r => r.month === monthF);
+  // Month filter — match against EITHER books month or 2B month
+  if (monthF) rows = rows.filter(r =>
+    r.booksMonth === monthF || r.b2Month === monthF
+  );
 
   // Status filter
   const statusF = document.getElementById('reco-status-filter') ? document.getElementById('reco-status-filter').value : '';
@@ -2748,15 +2849,15 @@ function run2BReco() {
       if (r.decision === 'claim') {
         actionCell = `
           <span class="badge badge-blue" style="margin-right:4px">✔ Claimed</span>
-          <button class="btn btn-outline btn-sm" onclick="setRecoDecision('${r.gstin}','${r.invNo}','none')">Undo</button>`;
+          <button class="btn btn-outline btn-sm" onclick="setRecoDecision('${r.gstin}','${r.invNo}','${r.month}','none')">Undo</button>`;
       } else if (r.decision === 'skip') {
         actionCell = `
           <span class="badge badge-gray" style="margin-right:4px">⊘ Skipped</span>
-          <button class="btn btn-outline btn-sm" onclick="setRecoDecision('${r.gstin}','${r.invNo}','none')">Undo</button>`;
+          <button class="btn btn-outline btn-sm" onclick="setRecoDecision('${r.gstin}','${r.invNo}','${r.month}','none')">Undo</button>`;
       } else {
         actionCell = `
-          <button class="btn btn-primary btn-sm" style="margin-right:4px" onclick="setRecoDecision('${r.gstin}','${r.invNo}','claim')" title="In 2B but not booked — claim ITC directly from 2B">✔ Claim ITC</button>
-          <button class="btn btn-outline btn-sm" onclick="setRecoDecision('${r.gstin}','${r.invNo}','skip')" title="Skip — ignore this 2B entry">⊘ Skip</button>`;
+          <button class="btn btn-primary btn-sm" style="margin-right:4px" onclick="setRecoDecision('${r.gstin}','${r.invNo}','${r.month}','claim')" title="In 2B but not booked — claim ITC directly from 2B">✔ Claim ITC</button>
+          <button class="btn btn-outline btn-sm" onclick="setRecoDecision('${r.gstin}','${r.invNo}','${r.month}','skip')" title="Skip — ignore this 2B entry">⊘ Skip</button>`;
       }
     }
 
@@ -2795,15 +2896,15 @@ function renderITCSummary() {
 
   // Claimed ITC — bills in books not in 2B, marked claim
   const claimedBooksItc = DB.purchase.filter(p => {
-    const k = recoKey(p.gstin, p.invNo);
-    const in2B = DB.data2b.some(d => ni(d.gstin) === ni(p.gstin) && ni(d.invNo) === ni(p.invNo));
+    const k = recoKey(p.gstin, p.invNo, p.month);
+    const in2B = DB.data2b.some(d => ni(d.gstin) === ni(p.gstin) && ni(d.invNo) === ni(p.invNo) && d.month === p.month);
     return !in2B && DB.recoDecisions[k] === 'claim';
   }).reduce((a,r) => a+r.itcAmt, 0);
 
   // Claimed ITC — in 2B not in books, marked claim
   const claimed2bItc = DB.data2b.filter(d => {
-    const k = recoKey(d.gstin, d.invNo);
-    const inBooks = DB.purchase.some(p => ni(p.gstin) === ni(d.gstin) && ni(p.invNo) === ni(d.invNo));
+    const k = recoKey(d.gstin, d.invNo, d.month);
+    const inBooks = DB.purchase.some(p => ni(p.gstin) === ni(d.gstin) && ni(p.invNo) === ni(d.invNo) && p.month === d.month);
     return !inBooks && DB.recoDecisions[k] === 'claim';
   }).reduce((a,r) => a+r.igst+r.cgst+r.sgst, 0);
 
@@ -2843,15 +2944,15 @@ function renderITCSummary() {
             // books-side claims (in books, not in 2B, marked claim)
             const bk = DB.purchase.filter(p => {
               if (p.month !== m) return false;
-              const k = recoKey(p.gstin, p.invNo);
-              const in2B = DB.data2b.some(d => ni(d.gstin)===ni(p.gstin) && ni(d.invNo)===ni(p.invNo));
+              const k = recoKey(p.gstin, p.invNo, p.month);
+              const in2B = DB.data2b.some(d => ni(d.gstin)===ni(p.gstin) && ni(d.invNo)===ni(p.invNo) && d.month===m);
               return !in2B && DB.recoDecisions[k] === 'claim';
             }).reduce((a,r)=>a+r.itcAmt,0);
             // 2b-side claims (in 2B, not in books, marked claim)
             const b2 = DB.data2b.filter(d => {
               if (d.month !== m) return false;
-              const k = recoKey(d.gstin, d.invNo);
-              const inBooks = DB.purchase.some(p => ni(p.gstin)===ni(d.gstin) && ni(p.invNo)===ni(d.invNo));
+              const k = recoKey(d.gstin, d.invNo, d.month);
+              const inBooks = DB.purchase.some(p => ni(p.gstin)===ni(d.gstin) && ni(p.invNo)===ni(d.invNo) && p.month===m);
               return !inBooks && DB.recoDecisions[k] === 'claim';
             }).reduce((a,r)=>a+r.igst+r.cgst+r.sgst,0);
             return bk + b2;
@@ -2879,6 +2980,8 @@ function renderITCSummary() {
 // SUMMARY MODULE
 // ===============================================================
 function getMonthlySummary(month) {
+  const ni = v => (v||'').toString().trim().toUpperCase();
+
   const activeSales = DB.sales.filter(r => r.month === month && r.status === 'Active');
   const returns = DB.returns.filter(r => r.month === month);
   const purchases = DB.purchase.filter(r => r.month === month && r.itc !== 'No');
@@ -2899,11 +3002,36 @@ function getMonthlySummary(month) {
   const rcmPaidCgst = rcm.filter(r => r.paid==='Yes').reduce((a,r) => a+r.cgst, 0);
   const rcmPaidSgst = rcm.filter(r => r.paid==='Yes').reduce((a,r) => a+r.sgst, 0);
 
-  // ITC from purchases (split by tax type based on GSTIN)
+  // ── ITC: use Final Claimable (matched + user-claimed) if 2B data exists,
+  //         otherwise fall back to Books ITC ──
+  const has2B = DB.data2b.some(d => d.month === month);
+
   let itcIgst=0, itcCgst=0, itcSgst=0;
-  purchases.forEach(r => { itcIgst+=r.igst; itcCgst+=r.cgst; itcSgst+=r.sgst; });
-  // Use itcAmt proportionally if partial
-  // For simplicity, use actual values
+
+  if (has2B) {
+    // Matched: purchase rows that have a matching 2B entry
+    const matchedPurch = purchases.filter(p =>
+      DB.data2b.some(d => ni(d.gstin)===ni(p.gstin) && ni(d.invNo)===ni(p.invNo))
+    );
+    // Books-side claimed: in books, not in 2B, marked 'claim'
+    const bkClaimed = purchases.filter(p => {
+      const in2B = DB.data2b.some(d => ni(d.gstin)===ni(p.gstin) && ni(d.invNo)===ni(p.invNo) && d.month===month);
+      return !in2B && DB.recoDecisions[recoKey(p.gstin, p.invNo, p.month)] === 'claim';
+    });
+    // 2B-side claimed: in 2B, not in books, marked 'claim'
+    const b2Claimed = DB.data2b.filter(d => {
+      if (d.month !== month) return false;
+      const inBooks = purchases.some(p => ni(p.gstin)===ni(d.gstin) && ni(p.invNo)===ni(d.invNo) && p.month===month);
+      return !inBooks && DB.recoDecisions[recoKey(d.gstin, d.invNo, d.month)] === 'claim';
+    });
+
+    matchedPurch.forEach(r => { itcIgst+=r.igst; itcCgst+=r.cgst; itcSgst+=r.sgst; });
+    bkClaimed.forEach(r  => { itcIgst+=r.igst; itcCgst+=r.cgst; itcSgst+=r.sgst; });
+    b2Claimed.forEach(r  => { itcIgst+=r.igst; itcCgst+=r.cgst; itcSgst+=r.sgst; });
+  } else {
+    // No 2B data — use all eligible Books ITC
+    purchases.forEach(r => { itcIgst+=r.igst; itcCgst+=r.cgst; itcSgst+=r.sgst; });
+  }
 
   const outIgst = salesIgst - retIgst + rcmIgst;
   const outCgst = salesCgst - retCgst + rcmCgst;
@@ -3001,7 +3129,7 @@ function renderSummary() {
             <td colspan="${MONTHS.length+2}" style="font-size:11px;font-weight:700;color:var(--teal);padding:6px 10px">INPUT TAX CREDIT</td>
           </tr>
           <tr>
-            <td>ITC (Purchase)</td>
+            <td>ITC (Final Claimable)</td>
             ${monthData.map(d=>`<td class="amount" style="color:var(--green)">${(d.s.itcIgst+d.s.itcCgst+d.s.itcSgst)?fmtN(d.s.itcIgst+d.s.itcCgst+d.s.itcSgst):'—'}</td>`).join('')}
             <td class="amount" style="color:var(--green);font-weight:700">${fmtN(totals.itcIgst+totals.itcCgst+totals.itcSgst)}</td>
           </tr>
@@ -3173,16 +3301,327 @@ function saveSettings() {
 // NAVIGATION
 // ===============================================================
 function switchTab(tab) {
-  ['sales','returns','purchase','rcm','reco2b','summary','payment','settings'].forEach(t => {
+  ['dashboard','sales','returns','purchase','rcm','reco2b','summary','payment','settings'].forEach(t => {
     document.getElementById('mod-'+t)?.classList.remove('active');
     document.getElementById('tab-'+t)?.classList.remove('active');
   });
   document.getElementById('mod-'+tab)?.classList.add('active');
   document.getElementById('tab-'+tab)?.classList.add('active');
+  if (tab === 'dashboard') renderDashboard();
+  if (tab === 'reco2b') run2BReco();
   if (tab === 'summary') renderSummary();
   if (tab === 'payment') renderPayment();
   if (tab === 'settings') loadSettingsForm();
 }
+
+// ===============================================================
+// DASHBOARD
+// ===============================================================
+function renderDashboard() {
+  const el = document.getElementById('dashboard-content');
+  if (!el) return;
+
+  const mf = document.getElementById('dash-month-filter')?.value || '';
+  // populate month filter if empty
+  const msel = document.getElementById('dash-month-filter');
+  if (msel && msel.options.length <= 1) {
+    MONTHS.forEach(m => { const o = document.createElement('option'); o.value=m; o.textContent=m; msel.appendChild(o); });
+  }
+
+  const filterMonth = r => !mf || r.month === mf;
+  const ni = v => (v||'').toString().trim().toUpperCase();
+
+  // ── Core data ──
+  const activeSales   = DB.sales.filter(r => r.status==='Active' && filterMonth(r));
+  const allReturns    = DB.returns.filter(filterMonth);
+  const allPurchase   = DB.purchase.filter(filterMonth);
+  const eligiblePurch = allPurchase.filter(r => r.itc !== 'No');
+  const allRcm        = DB.rcm.filter(filterMonth);
+
+  // ── KPIs ──
+  const totalSales     = activeSales.reduce((a,r) => a+r.total, 0);
+  const netTaxable     = activeSales.reduce((a,r) => a+r.taxable, 0) - allReturns.reduce((a,r) => a+r.taxable, 0);
+  const totalOutputTax = activeSales.reduce((a,r) => a+r.igst+r.cgst+r.sgst, 0) - allReturns.reduce((a,r) => a+r.igst+r.cgst+r.sgst, 0);
+  const totalITC       = eligiblePurch.reduce((a,r) => a+r.itcAmt, 0);
+  const totalPurchase  = allPurchase.reduce((a,r) => a+r.total, 0);
+  const rcmLiability   = allRcm.reduce((a,r) => a+r.igst+r.cgst+r.sgst, 0);
+  const rcmPaid        = allRcm.filter(r => r.paid==='Yes').reduce((a,r) => a+r.igst+r.cgst+r.sgst, 0);
+  const netPayable     = Math.max(0, totalOutputTax - totalITC - rcmPaid);
+  const itcUtilPct     = totalOutputTax > 0 ? Math.min(100, (totalITC/totalOutputTax)*100) : 0;
+  const creditNoteAmt  = allReturns.reduce((a,r) => a+r.total, 0);
+  const invoiceCount   = activeSales.length;
+  const suppCount      = new Set(allPurchase.map(r => ni(r.gstin)||ni(r.supplier))).size;
+
+  // ── Month-wise trend ──
+  const monthSales = MONTHS.map(m => ({
+    m,
+    sales:  DB.sales.filter(r => r.month===m && r.status==='Active').reduce((a,r)=>a+r.total,0),
+    purch:  DB.purchase.filter(r => r.month===m).reduce((a,r)=>a+r.total,0),
+    tax:    DB.sales.filter(r => r.month===m && r.status==='Active').reduce((a,r)=>a+r.igst+r.cgst+r.sgst,0),
+    itc:    DB.purchase.filter(r => r.month===m && r.itc!=='No').reduce((a,r)=>a+r.itcAmt,0),
+  })).filter(d => d.sales > 0 || d.purch > 0);
+
+  const maxSales = Math.max(...monthSales.map(d => d.sales), 1);
+  const maxPurch = Math.max(...monthSales.map(d => d.purch), 1);
+
+  // ── Top customers by sales ──
+  const custMap = {};
+  activeSales.forEach(r => {
+    const k = r.party || 'Unknown';
+    if (!custMap[k]) custMap[k] = { name:k, gstin:r.gstin||'—', total:0, tax:0, count:0 };
+    custMap[k].total += r.total;
+    custMap[k].tax   += r.igst+r.cgst+r.sgst;
+    custMap[k].count++;
+  });
+  const topCustomers = Object.values(custMap).sort((a,b) => b.total-a.total).slice(0,8);
+  const maxCust = topCustomers[0]?.total || 1;
+
+  // ── Top suppliers by purchase ──
+  const suppMap = {};
+  allPurchase.forEach(r => {
+    const k = r.supplier || 'Unknown';
+    if (!suppMap[k]) suppMap[k] = { name:k, gstin:r.gstin||'—', total:0, itc:0, count:0 };
+    suppMap[k].total += r.total;
+    suppMap[k].itc   += r.itcAmt||0;
+    suppMap[k].count++;
+  });
+  const topSuppliers = Object.values(suppMap).sort((a,b) => b.total-a.total).slice(0,8);
+  const maxSupp = topSuppliers[0]?.total || 1;
+
+  // ── 2B Reco status ──
+  const has2B = DB.data2b.length > 0;
+  const matched2B = has2B ? DB.purchase.filter(p =>
+    (!mf || p.month===mf) && p.itc!=='No' &&
+    DB.data2b.some(d => (!mf||d.month===mf) && ni(d.gstin)===ni(p.gstin) && ni(d.invNo)===ni(p.invNo))
+  ).length : 0;
+  const total2BPurch = eligiblePurch.length;
+  const unresolved2B = has2B ? total2BPurch - matched2B : 0;
+
+  // ── Cancelled invoices ──
+  const cancelledCount = DB.sales.filter(r => r.status==='Cancelled' && filterMonth(r)).length;
+
+  // ── ITC by eligibility ──
+  const itcYes  = allPurchase.filter(r => r.itc==='Yes').reduce((a,r)=>a+r.itcAmt,0);
+  const itcPart = allPurchase.filter(r => r.itc==='Partial').reduce((a,r)=>a+r.itcAmt,0);
+  const itcNo   = allPurchase.filter(r => r.itc==='No').reduce((a,r)=>a+(r.igst+r.cgst+r.sgst),0);
+
+  // ── RCM pending ──
+  const rcmPending = allRcm.filter(r => r.paid!=='Yes').reduce((a,r)=>a+r.igst+r.cgst+r.sgst,0);
+
+  // ── Render ──
+  el.innerHTML = `
+
+  <!-- KPI Row -->
+  <div class="dash-kpi-grid">
+    <div class="dash-kpi" style="--accent-color:#3b82f6">
+      <div class="dash-kpi-label">Total Sales</div>
+      <div class="dash-kpi-value">${fmt(totalSales)}</div>
+      <div class="dash-kpi-sub">${invoiceCount} active invoices</div>
+    </div>
+    <div class="dash-kpi" style="--accent-color:#10b981">
+      <div class="dash-kpi-label">Net Taxable (Sales−CN)</div>
+      <div class="dash-kpi-value">${fmt(netTaxable)}</div>
+      <div class="dash-kpi-sub">Credit notes: ${fmt(creditNoteAmt)}</div>
+    </div>
+    <div class="dash-kpi" style="--accent-color:#f59e0b">
+      <div class="dash-kpi-label">Output Tax</div>
+      <div class="dash-kpi-value">${fmt(totalOutputTax)}</div>
+      <div class="dash-kpi-sub">After credit notes</div>
+    </div>
+    <div class="dash-kpi" style="--accent-color:#8b5cf6">
+      <div class="dash-kpi-label">ITC Available</div>
+      <div class="dash-kpi-value">${fmt(totalITC)}</div>
+      <div class="dash-kpi-sub">${suppCount} suppliers · ${allPurchase.length} bills</div>
+    </div>
+    <div class="dash-kpi" style="--accent-color:${netPayable>0?'#ef4444':'#10b981'}">
+      <div class="dash-kpi-label">Est. Cash Payable</div>
+      <div class="dash-kpi-value">${fmt(netPayable)}</div>
+      <div class="dash-kpi-sub">Output − ITC − RCM paid</div>
+    </div>
+    <div class="dash-kpi" style="--accent-color:#06b6d4">
+      <div class="dash-kpi-label">Total Purchase</div>
+      <div class="dash-kpi-value">${fmt(totalPurchase)}</div>
+      <div class="dash-kpi-sub">All bills (incl. non-ITC)</div>
+    </div>
+  </div>
+
+  <!-- Monthly Trend + ITC Health -->
+  <div class="dash-grid-13">
+    <div class="dash-card">
+      <div class="dash-card-hdr">
+        <span class="dash-card-title">📈 Monthly Trend</span>
+        <span style="font-size:10px;color:var(--gray4)">${mf||'All Months'}</span>
+      </div>
+      <div class="dash-card-body">
+        ${monthSales.length === 0 ? '<div class="dash-empty">No data yet</div>' : `
+        <div style="margin-bottom:12px">
+          <div style="font-size:10px;color:var(--gray5);margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:0.4px">Sales (₹)</div>
+          <div class="month-chart">
+            ${monthSales.map(d=>`
+              <div class="month-bar-wrap">
+                <div class="month-bar" style="height:${Math.max(4,(d.sales/maxSales)*52)}px;background:var(--blue)" title="${d.m}: ${fmt(d.sales)}"></div>
+                <span class="month-label">${d.m.split('-')[0]}</span>
+              </div>`).join('')}
+          </div>
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--gray5);margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:0.4px">Purchase (₹)</div>
+          <div class="month-chart">
+            ${monthSales.map(d=>`
+              <div class="month-bar-wrap">
+                <div class="month-bar" style="height:${Math.max(4,(d.purch/maxPurch)*52)}px;background:#8b5cf6" title="${d.m}: ${fmt(d.purch)}"></div>
+                <span class="month-label">${d.m.split('-')[0]}</span>
+              </div>`).join('')}
+          </div>
+        </div>
+        <div style="display:flex;gap:12px;margin-top:10px">
+          <div style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--gray5)"><div style="width:10px;height:10px;border-radius:2px;background:var(--blue)"></div>Sales</div>
+          <div style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--gray5)"><div style="width:10px;height:10px;border-radius:2px;background:#8b5cf6"></div>Purchase</div>
+        </div>
+        `}
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <!-- ITC Health -->
+      <div class="dash-card">
+        <div class="dash-card-hdr"><span class="dash-card-title">🏥 ITC Health</span></div>
+        <div class="dash-card-body">
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+            <span style="color:var(--gray6)">ITC vs Output Tax</span>
+            <span style="font-weight:700;color:${itcUtilPct>=80?'var(--green)':itcUtilPct>=50?'var(--amber)':'var(--red)'}">${itcUtilPct.toFixed(1)}%</span>
+          </div>
+          <div class="itc-meter"><div class="itc-fill" style="width:${itcUtilPct}%"></div></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px">
+            <div style="text-align:center;padding:8px;background:var(--green-light);border-radius:var(--radius)">
+              <div style="font-size:10px;color:var(--green);font-weight:700;text-transform:uppercase">Full ITC</div>
+              <div style="font-size:13px;font-weight:700;color:var(--navy);font-family:var(--font-mono)">${fmt(itcYes)}</div>
+            </div>
+            <div style="text-align:center;padding:8px;background:var(--amber-light);border-radius:var(--radius)">
+              <div style="font-size:10px;color:var(--amber);font-weight:700;text-transform:uppercase">Partial</div>
+              <div style="font-size:13px;font-weight:700;color:var(--navy);font-family:var(--font-mono)">${fmt(itcPart)}</div>
+            </div>
+            <div style="text-align:center;padding:8px;background:var(--red-light);border-radius:var(--radius)">
+              <div style="font-size:10px;color:var(--red);font-weight:700;text-transform:uppercase">Blocked</div>
+              <div style="font-size:13px;font-weight:700;color:var(--navy);font-family:var(--font-mono)">${fmt(itcNo)}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Status Snapshot -->
+      <div class="dash-card">
+        <div class="dash-card-hdr"><span class="dash-card-title">⚡ Status Snapshot</span></div>
+        <div class="dash-card-body" style="padding:12px 18px">
+          <div class="status-row">
+            <span style="color:var(--gray7)">Active Invoices</span>
+            <span style="font-weight:700;color:var(--navy)">${invoiceCount}</span>
+          </div>
+          <div class="status-row">
+            <span style="color:var(--gray7)">Cancelled Invoices</span>
+            <span style="font-weight:700;color:var(--red)">${cancelledCount}</span>
+          </div>
+          <div class="status-row">
+            <span style="color:var(--gray7)">Credit Notes</span>
+            <span style="font-weight:700;color:var(--amber)">${allReturns.length}</span>
+          </div>
+          <div class="status-row">
+            <span style="color:var(--gray7)">RCM Pending Payment</span>
+            <span style="font-weight:700;color:${rcmPending>0?'var(--red)':'var(--green)'}">${rcmPending>0?fmt(rcmPending):'✓ Nil'}</span>
+          </div>
+          <div class="status-row">
+            <span style="color:var(--gray7)">2B Reconciliation</span>
+            <span style="font-weight:700;color:${!has2B?'var(--gray4)':unresolved2B>0?'var(--amber)':'var(--green)'}">${!has2B?'No 2B data':unresolved2B>0?`${unresolved2B} unresolved`:'✓ All matched'}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top Customers + Top Suppliers -->
+  <div class="dash-grid-2">
+    <div class="dash-card">
+      <div class="dash-card-hdr">
+        <span class="dash-card-title">🏆 Top Customers by Sales</span>
+        <span style="font-size:10px;color:var(--gray4)">${topCustomers.length} shown</span>
+      </div>
+      <div class="dash-card-body" style="padding:12px 18px">
+        ${topCustomers.length===0 ? '<div class="dash-empty">No sales data</div>' :
+          `<div class="bar-chart">
+            ${topCustomers.map((c,i)=>`
+              <div class="bar-row">
+                <div class="bar-label" title="${c.name}">${c.name}</div>
+                <div class="bar-track"><div class="bar-fill" style="width:${(c.total/maxCust)*100}%;background:${['#3b82f6','#6366f1','#8b5cf6','#a78bfa','#60a5fa','#34d399','#f59e0b','#fb923c'][i%8]}"></div></div>
+                <div class="bar-val">${fmt(c.total)}</div>
+              </div>`).join('')}
+          </div>`}
+      </div>
+    </div>
+
+    <div class="dash-card">
+      <div class="dash-card-hdr">
+        <span class="dash-card-title">🏭 Top Suppliers by Purchase</span>
+        <span style="font-size:10px;color:var(--gray4)">${topSuppliers.length} shown</span>
+      </div>
+      <div class="dash-card-body" style="padding:12px 18px">
+        ${topSuppliers.length===0 ? '<div class="dash-empty">No purchase data</div>' :
+          `<div class="bar-chart">
+            ${topSuppliers.map((s,i)=>`
+              <div class="bar-row">
+                <div class="bar-label" title="${s.name}">${s.name}</div>
+                <div class="bar-track"><div class="bar-fill" style="width:${(s.total/maxSupp)*100}%;background:${['#10b981','#06b6d4','#0ea5e9','#6366f1','#34d399','#14b8a6','#22d3ee','#38bdf8'][i%8]}"></div></div>
+                <div class="bar-val">${fmt(s.total)}</div>
+              </div>`).join('')}
+          </div>`}
+      </div>
+    </div>
+  </div>
+
+  <!-- Customer Detail Table + Month-wise Tax -->
+  <div class="dash-grid-2">
+    <div class="dash-card">
+      <div class="dash-card-hdr"><span class="dash-card-title">📋 Customer-wise Sales Detail</span></div>
+      <div class="dash-card-body" style="padding:0;overflow-x:auto">
+        ${topCustomers.length===0 ? '<div class="dash-empty">No sales data</div>' : `
+        <table class="dash-mini-table">
+          <thead><tr><th>#</th><th>Party</th><th>Invoices</th><th style="text-align:right">Sales</th><th style="text-align:right">Tax</th></tr></thead>
+          <tbody>
+            ${topCustomers.map((c,i)=>`<tr>
+              <td style="color:var(--gray4);font-size:11px">${i+1}</td>
+              <td><div style="font-weight:600;font-size:12px">${c.name}</div><div style="font-size:10px;color:var(--gray4);font-family:var(--font-mono)">${c.gstin}</div></td>
+              <td style="text-align:center">${c.count}</td>
+              <td class="amount" style="font-weight:600;color:var(--navy)">${fmt(c.total)}</td>
+              <td class="amount" style="color:var(--amber)">${fmt(c.tax)}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>`}
+      </div>
+    </div>
+
+    <div class="dash-card">
+      <div class="dash-card-hdr"><span class="dash-card-title">📅 Month-wise Tax Summary</span></div>
+      <div class="dash-card-body" style="padding:0;overflow-x:auto">
+        ${monthSales.length===0 ? '<div class="dash-empty">No data yet</div>' : `
+        <table class="dash-mini-table">
+          <thead><tr><th>Month</th><th style="text-align:right">Output Tax</th><th style="text-align:right">ITC</th><th style="text-align:right">Net Payable</th></tr></thead>
+          <tbody>
+            ${monthSales.map(d=>{
+              const net = Math.max(0, d.tax - d.itc);
+              return `<tr>
+                <td style="font-weight:600">${d.m}</td>
+                <td class="amount" style="color:var(--amber)">${fmt(d.tax)}</td>
+                <td class="amount" style="color:var(--green)">${fmt(d.itc)}</td>
+                <td class="amount" style="font-weight:700;color:${net>0?'var(--red)':'var(--green)'}">${net>0?fmt(net):'Credit'}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>`}
+      </div>
+    </div>
+  </div>
+  `;
+}
+
 
 // ===============================================================
 // IMPORT / EXPORT
@@ -3274,6 +3713,11 @@ function refreshAll() {
   renderRcmTable();
   render2BTable();
   loadSettingsForm();
+  // Re-render active tabs
+  const dashActive = document.getElementById('mod-dashboard')?.classList.contains('active');
+  if (dashActive) renderDashboard();
+  const recoActive = document.getElementById('mod-reco2b')?.classList.contains('active');
+  if (recoActive) run2BReco();
 }
 
 // ===============================================================
